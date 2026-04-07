@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ZILIKO · Field App</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#2d333b;
+  --border:#30363d;--border2:#444c56;
+  --blue:#2563eb;--blue2:#1d4ed8;--blue-glow:rgba(37,99,235,.22);
+  --green:#10b981;--green-dim:rgba(16,185,129,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.1);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.1);
+  --purple:#8b5cf6;--purple-dim:rgba(139,92,246,.1);
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --r:12px;--r-sm:8px;
+  --safe-bottom:env(safe-area-inset-bottom,16px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;max-width:430px;margin:0 auto;display:flex;flex-direction:column;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.splash-logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:#fff;line-height:1;}
+.splash-sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;}
+.splash-bar{width:120px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:8px;}
+.splash-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:2px;animation:loadBar 1.6s ease forwards;}
+@keyframes loadBar{to{width:100%;}}
+
+/* HEADER */
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.h-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;}
+.h-logo span{color:var(--text2);font-size:14px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.sync-pill{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:4px 9px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1px;}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.officer-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:border-color .2s;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.officer-chip:hover{border-color:var(--blue);}
+
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* BOTTOM NAV */
+.bottom-nav{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding:8px 4px calc(8px + var(--safe-bottom));flex-shrink:0;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border-radius:var(--r-sm);transition:all .2s;position:relative;}
+.nav-item.active .nav-icon{color:var(--blue);}
+.nav-item.active .nav-label{color:var(--blue);}
+.nav-icon{font-size:20px;color:var(--text3);transition:color .2s;}
+.nav-label{font-size:9px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;}
+.nav-badge{position:absolute;top:4px;right:calc(50% - 16px);background:var(--red);color:white;border-radius:8px;font-size:9px;padding:1px 5px;font-family:'JetBrains Mono',monospace;min-width:16px;text-align:center;}
+
+/* SCREENS */
+.screen{display:none;padding:16px 16px;}
+.screen.active{display:block;}
+
+/* SECTION */
+.section-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.section-sub{font-size:13px;color:var(--text2);margin-bottom:14px;}
+
+/* TODAY HERO */
+.today-hero{background:linear-gradient(135deg,#1e3a5f,#0d2137);border:1px solid rgba(37,99,235,.3);border-radius:var(--r);padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+.today-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(37,99,235,.3),transparent);border-radius:50%;}
+.hero-row{display:flex;align-items:center;gap:16px;}
+.hero-ring{position:relative;width:72px;height:72px;flex-shrink:0;}
+.hero-ring svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5;}
+.ring-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
+.ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:white;}
+.hero-stats{flex:1;}
+.hero-amount{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--white);line-height:1;letter-spacing:1px;}
+.hero-label{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;margin-bottom:10px;}
+.hero-chips{display:flex;gap:8px;}
+.hero-chip{background:rgba(255,255,255,.1);border-radius:6px;padding:6px 10px;text-align:center;}
+.hero-chip-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:white;line-height:1;}
+.hero-chip-lbl{font-size:9px;color:rgba(255,255,255,.5);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-top:1px;}
+
+/* DAY CHIPS */
+.day-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
+.day-scroll::-webkit-scrollbar{display:none;}
+.day-chip{flex-shrink:0;padding:8px 14px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .2s;white-space:nowrap;}
+.day-chip.active{background:var(--blue);color:white;border-color:var(--blue);}
+.day-chip.today{border-color:var(--blue);color:var(--blue);}
+.day-chip.today.active{background:var(--blue);color:white;}
+
+/* COLLECT CARD */
+.collect-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
+.collect-card.paid{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05);}
+.collect-card.overdue{border-color:rgba(239,68,68,.3);}
+.collect-card.salary-type{border-color:rgba(139,92,246,.3);}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.cc-avatar{width:44px;height:44px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;color:white;flex-shrink:0;overflow:hidden;}
+.cc-avatar img{width:100%;height:100%;object-fit:cover;}
+.cc-info{flex:1;margin-left:12px;}
+.cc-name{font-size:15px;font-weight:600;color:var(--text);}
+.cc-meta{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.cc-amount{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--blue);line-height:1;}
+.cc-amount.paid{color:var(--green);}
+.cc-amount.salary-c{color:var(--purple);}
+.cc-actions{display:flex;gap:7px;margin-top:12px;}
+.cc-btn{flex:2;background:var(--blue);border:none;border-radius:var(--r-sm);padding:11px;color:white;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.3px;}
+.cc-btn:active{transform:scale(.97);}
+.cc-btn.green{background:var(--green);}
+.cc-btn.purple{background:var(--purple);}
+.cc-btn-sm{flex:1;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+.cc-btn-sm.red{border-color:rgba(239,68,68,.3);color:var(--red);}
+.cc-btn-sm.amber{border-color:rgba(245,158,11,.3);color:var(--amber);}
+
+/* STATUS PILLS */
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;font-weight:500;text-transform:uppercase;}
+.sp-current{background:var(--green-dim);color:var(--green);}
+.sp-par30{background:var(--amber-dim);color:var(--amber);}
+.sp-default{background:var(--red-dim);color:var(--red);}
+.sp-paid{background:var(--green-dim);color:var(--green);}
+.sp-due{background:rgba(37,99,235,.12);color:var(--blue);}
+.sp-salary{background:var(--purple-dim);color:var(--purple);}
+.sp-missed{background:var(--red-dim);color:var(--red);}
+.sp-promise{background:var(--amber-dim);color:var(--amber);}
+
+/* LOAN TYPE TOGGLE */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.type-btn{background:var(--bg3);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 10px;cursor:pointer;text-align:center;transition:all .2s;}
+.type-btn.active{border-color:var(--blue);background:rgba(37,99,235,.1);}
+.type-btn.active-purple{border-color:var(--purple)!important;background:var(--purple-dim)!important;}
+.type-icon{font-size:22px;margin-bottom:4px;}
+.type-label{font-size:13px;font-weight:600;color:var(--text);}
+.type-sub{font-size:10px;color:var(--text2);line-height:1.3;margin-top:2px;}
+.type-btn.active .type-label{color:var(--blue);}
+.type-btn.active-purple .type-label{color:var(--purple)!important;}
+
+/* PHOTO */
+.photo-box{background:var(--bg3);border:2px dashed var(--border);border-radius:var(--r-sm);padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;cursor:pointer;transition:all .2s;}
+.photo-box:hover{border-color:var(--blue);}
+.photo-box.has-photo{border-style:solid;border-color:var(--green);background:var(--green-dim);}
+.photo-thumb{width:72px;height:72px;border-radius:8px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0;font-size:24px;color:var(--text3);}
+.photo-thumb img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid var(--green);}
+.photo-text-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.photo-text-sub{font-size:11px;color:var(--text2);line-height:1.4;}
+.photo-btns{display:flex;gap:6px;margin-top:8px;}
+.photo-btn{padding:6px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);text-transform:uppercase;}
+.photo-btn.primary{background:var(--blue);color:white;border-color:var(--blue);}
+.photo-btn.danger{border-color:rgba(239,68,68,.3);color:var(--red);}
+input[type=file]#photo-cam,input[type=file]#photo-gal{display:none;}
+
+/* LOAN PREVIEW */
+.loan-preview{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.3);border-radius:var(--r-sm);padding:14px;margin-bottom:14px;display:none;}
+.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.preview-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:2px;}
+.preview-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);line-height:1;}
+.preview-val.accent{color:var(--blue);}
+.preview-val.green{color:var(--green);}
+
+/* MY LOANS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);line-height:1;}
+.stat-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:3px;}
+.loan-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;}
+.lc-row{display:flex;align-items:flex-start;gap:12px;}
+.lc-avatar{width:40px;height:40px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:white;flex-shrink:0;overflow:hidden;}
+.lc-avatar img{width:100%;height:100%;object-fit:cover;}
+.lc-name{font-size:14px;font-weight:600;color:var(--text);}
+.lc-id{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2);margin-top:1px;}
+.lc-metrics{display:flex;gap:14px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border);}
+.lc-metric-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.lc-metric-val{font-size:14px;font-weight:600;color:var(--text);}
+.lc-actions{display:flex;gap:6px;margin-top:10px;}
+.lc-btn{flex:1;padding:9px 4px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid;background:transparent;text-transform:uppercase;}
+.lc-btn.green{border-color:rgba(16,185,129,.3);color:var(--green);}
+.lc-btn.blue{border-color:rgba(37,99,235,.3);color:var(--blue);}
+.lc-btn.red{border-color:rgba(239,68,68,.3);color:var(--red);}
+
+/* SUMMARY */
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.act-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.act-name{font-size:13px;font-weight:500;color:var(--text);}
+.act-meta{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
+.act-amt{font-family:'Bebas Neue',sans-serif;font-size:20px;margin-left:auto;flex-shrink:0;}
+.progress-bar-wrap{margin-bottom:16px;}
+.progress-bar-top{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px;}
+.progress-bar-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.progress-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .6s ease;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px 12px 40px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--blue);}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3);}
+.search-results{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);margin-top:4px;max-height:200px;overflow-y:auto;display:none;position:absolute;width:100%;z-index:100;}
+.search-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .15s;}
+.search-item:hover{background:var(--bg3);}
+.search-item:last-child{border-bottom:none;}
+
+/* FORM */
+.fl{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s;}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow);}
+.fi::placeholder{color:var(--text3);}
+.fi-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;background-color:var(--bg3);}
+.fi-sel option{background:var(--bg2);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.salary-banner{background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--purple);display:flex;align-items:center;gap:8px;font-weight:500;}
+
+/* SELECTED CARD */
+.selected-card{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.3);border-radius:var(--r-sm);padding:14px;margin-bottom:14px;display:none;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));width:100%;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s ease;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:36px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
+.amount-input{width:100%;background:var(--bg3);border:2px solid var(--border);border-radius:var(--r-sm);padding:16px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:36px;text-align:center;outline:none;letter-spacing:2px;margin-bottom:10px;}
+.amount-input:focus{border-color:var(--blue);}
+.suggest-btns{display:flex;gap:6px;margin-bottom:14px;}
+.suggest-btn{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);cursor:pointer;text-align:center;}
+.suggest-btn:active{background:rgba(37,99,235,.15);}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;border-radius:var(--r-sm);padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.btn-primary:active{opacity:.85;}
+.btn-secondary{width:100%;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px;}
+
+/* OFFICER OPTION */
+.officer-option{padding:15px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;}
+.officer-option:hover{background:var(--bg3);}
+.officer-option:last-child{border-bottom:none;}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 20px;font-size:13px;color:var(--text);z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.green{border-color:rgba(16,185,129,.4);color:var(--green);}
+.toast.red{border-color:rgba(239,68,68,.3);color:var(--red);}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--text2);}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:.3;}
+.empty-text{font-size:14px;line-height:1.5;}
+
+/* LOADING OVERLAY */
+#app-loading{position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#app-loading p{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-logo">ZILIKO</div>
+  <div class="splash-sub">Field Officer · Zambia</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<div id="app-loading" style="display:none;">
+  <div class="spinner"></div>
+  <p id="loading-msg">CONNECTING TO FIREBASE...</p>
+</div>
+
+<div class="app-header">
+  <div class="h-logo">ZILIKO <span>· FIELD</span></div>
+  <div class="header-right">
+    <div class="sync-pill" id="sync-pill" style="display:none;"><div class="sync-dot"></div>LIVE</div>
+    <div class="officer-chip" id="officer-chip" onclick="openOfficerModal()">SELECT OFFICER ▾</div>
+  </div>
+</div>
+
+<div class="scroll-area" id="scroll-area">
+
+<!-- TODAY -->
+<div class="screen active" id="screen-today">
+  <div style="padding-top:4px;">
+    <div class="today-hero">
+      <div class="hero-row">
+        <div class="hero-ring">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-bg" cx="36" cy="36" r="30"/>
+            <circle class="ring-fill" id="ring-fill" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+          </svg>
+          <div class="ring-text" id="ring-pct">0%</div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-amount" id="hero-amt">K0</div>
+          <div class="hero-label">collected today</div>
+          <div class="hero-chips">
+            <div class="hero-chip"><div class="hero-chip-val" id="h-paid">0</div><div class="hero-chip-lbl">PAID</div></div>
+            <div class="hero-chip"><div class="hero-chip-val" id="h-due">0</div><div class="hero-chip-lbl">DUE</div></div>
+            <div class="hero-chip"><div class="hero-chip-val" id="h-miss">0</div><div class="hero-chip-lbl">MISSED</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;">Payment Schedule</span>
+    </div>
+    <div class="day-scroll" id="day-scroll"></div>
+    <div id="today-list"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Connecting to Firebase...<br>Select your name above to see your schedule</div></div></div>
+  </div>
+</div>
+
+<!-- COLLECT -->
+<div class="screen" id="screen-collect">
+  <div style="padding-top:4px;">
+    <div class="section-title">Record Payment</div>
+    <div class="section-sub">Search for a borrower to log a collection</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" placeholder="Search name or Loan ID..." oninput="searchBorrower(this.value)"/>
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <div class="selected-card" id="selected-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div><div id="sel-name" style="font-size:15px;font-weight:600;color:var(--text);"></div><div id="sel-id" style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;margin-top:2px;"></div></div>
+        <span class="status-pill" id="sel-status"></span>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <div><div class="preview-label">Outstanding</div><div id="sel-amt" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);"></div></div>
+        <div><div class="preview-label">Weekly</div><div id="sel-inst" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--blue);"></div></div>
+        <div><div class="preview-label">DPD</div><div id="sel-dpd" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);"></div></div>
+      </div>
+    </div>
+    <label class="fl">Amount Collected (ZMW)</label>
+    <input class="fi" type="number" id="collect-amt" placeholder="0.00" inputmode="decimal" style="font-size:18px;font-family:'JetBrains Mono',monospace;"/>
+    <label class="fl">Payment Method</label>
+    <select class="fi fi-sel" id="collect-method">
+      <option value="cash">Cash</option>
+      <option value="mobile_money">Mobile Money (Airtel / MTN)</option>
+      <option value="bank">Bank Transfer</option>
+    </select>
+    <label class="fl">Notes (Optional)</label>
+    <input class="fi" id="collect-notes" placeholder="e.g. Partial payment, promised rest Friday..."/>
+    <button class="btn-primary" onclick="recordPayment()">Record Payment →</button>
+  </div>
+</div>
+
+<!-- DISBURSE -->
+<div class="screen" id="screen-disburse">
+  <div style="padding-top:4px;">
+    <div class="section-title">New Loan</div>
+    <div class="section-sub">Disburse a microloan or salary advance</div>
+    <label class="fl">Loan Product</label>
+    <div class="type-toggle">
+      <button class="type-btn active" id="btn-weekly" onclick="setLoanType('weekly')">
+        <div class="type-icon">📅</div>
+        <div class="type-label">Weekly Microloan</div>
+        <div class="type-sub">Weekly repayments · Any borrower</div>
+      </button>
+      <button class="type-btn" id="btn-salary" onclick="setLoanType('salary')">
+        <div class="type-icon">💼</div>
+        <div class="type-label">Salary Advance</div>
+        <div class="type-sub">Monthly · Salaried workers</div>
+      </button>
+    </div>
+    <label class="fl">Client Face Photo</label>
+    <div class="photo-box" id="photo-box" onclick="openCamera()">
+      <div class="photo-thumb" id="photo-thumb"><span>📷</span><span style="font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;color:var(--text3);">TAP</span></div>
+      <div>
+        <div class="photo-text-title" id="photo-title">Add Client Photo</div>
+        <div class="photo-text-sub" id="photo-sub">Take a face photo for identity verification</div>
+        <div class="photo-btns" id="photo-btns">
+          <button class="photo-btn primary" onclick="event.stopPropagation();openCamera()">📷 Camera</button>
+          <button class="photo-btn" onclick="event.stopPropagation();openGallery()">🖼 Gallery</button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="photo-cam" accept="image/*" capture="user" onchange="handlePhoto(this)"/>
+    <input type="file" id="photo-gal" accept="image/*" onchange="handlePhoto(this)"/>
+    <div class="form-row-2">
+      <div><label class="fl">Full Name</label><input class="fi" id="dis-name" placeholder="Mulenga Chanda"/></div>
+      <div><label class="fl">Phone</label><input class="fi" id="dis-phone" placeholder="+260..." type="tel"/></div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="fl">NRC / ID</label><input class="fi" id="dis-nrc" placeholder="NRC Number"/></div>
+      <div><label class="fl">Purpose</label>
+        <select class="fi fi-sel" id="dis-purpose">
+          <option value="business">Business / Trade</option>
+          <option value="school">School Fees</option>
+          <option value="medical">Medical</option>
+          <option value="farming">Farming</option>
+          <option value="household">Household</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="fl">Amount (ZMW)</label><input class="fi" type="number" id="dis-amount" placeholder="0.00" inputmode="decimal" oninput="previewLoan()"/></div>
+      <div><label class="fl">Interest Rate</label>
+        <select class="fi fi-sel" id="dis-rate" onchange="previewLoan()">
+          <option value="5">5% flat</option><option value="10">10% flat</option><option value="15">15% flat</option><option value="20">20% flat</option><option value="25">25% flat</option><option value="30" selected>30% flat</option><option value="35">35% flat</option><option value="40">40% flat</option><option value="50">50% flat</option><option value="60">60% flat</option><option value="75">75% flat</option><option value="100">100% flat</option>
+        </select>
+      </div>
+    </div>
+    <div id="weekly-fields">
+      <label class="fl">Term (Weeks)</label>
+      <select class="fi fi-sel" id="dis-term" onchange="previewLoan()">
+        <option value="1">1 week</option><option value="2">2 weeks</option><option value="3">3 weeks</option><option value="4">4 weeks</option><option value="5">5 weeks</option><option value="6">6 weeks</option><option value="7">7 weeks</option><option value="8" selected>8 weeks</option><option value="9">9 weeks</option><option value="10">10 weeks</option><option value="11">11 weeks</option><option value="12">12 weeks</option><option value="13">13 weeks</option><option value="14">14 weeks</option><option value="15">15 weeks</option><option value="16">16 weeks</option><option value="17">17 weeks</option><option value="18">18 weeks</option><option value="19">19 weeks</option><option value="20">20 weeks</option><option value="21">21 weeks</option><option value="22">22 weeks</option><option value="23">23 weeks</option><option value="24">24 weeks</option><option value="25">25 weeks</option><option value="26">26 weeks</option><option value="27">27 weeks</option><option value="28">28 weeks</option><option value="29">29 weeks</option><option value="30">30 weeks</option><option value="31">31 weeks</option><option value="32">32 weeks</option><option value="33">33 weeks</option><option value="34">34 weeks</option><option value="35">35 weeks</option><option value="36">36 weeks</option><option value="37">37 weeks</option><option value="38">38 weeks</option><option value="39">39 weeks</option><option value="40">40 weeks</option><option value="41">41 weeks</option><option value="42">42 weeks</option><option value="43">43 weeks</option><option value="44">44 weeks</option><option value="45">45 weeks</option><option value="46">46 weeks</option><option value="47">47 weeks</option><option value="48">48 weeks</option><option value="49">49 weeks</option><option value="50">50 weeks</option><option value="51">51 weeks</option><option value="52">52 weeks</option>
+      </select>
+    </div>
+    <div id="salary-fields" style="display:none;">
+      <div class="salary-banner">💼 Salary Advance — repaid monthly on salary date</div>
+      <div class="form-row-2">
+        <div><label class="fl">Repayment Months</label>
+          <select class="fi fi-sel" id="dis-months" onchange="previewLoan()">
+            <option value="1">1 month</option><option value="2" selected>2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="6">6 months</option>
+          </select>
+        </div>
+        <div><label class="fl">Salary Day</label>
+          <select class="fi fi-sel" id="dis-salary-day" onchange="previewLoan()">
+            <option value="25">25th</option><option value="26">26th</option><option value="27">27th</option><option value="28">28th</option><option value="30">30th</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div><label class="fl">Employer</label><input class="fi" id="dis-employer" placeholder="e.g. ZRA"/></div>
+        <div><label class="fl">Employee No.</label><input class="fi" id="dis-empnum" placeholder="Staff No."/></div>
+      </div>
+    </div>
+    <label class="fl">Collateral / Guarantor</label>
+    <input class="fi" id="dis-collateral" placeholder="e.g. Payslip, asset..."/>
+    <div class="loan-preview" id="loan-preview">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:10px;">Loan Preview</div>
+      <div class="preview-grid">
+        <div><div class="preview-label">Principal</div><div class="preview-val" id="prev-principal">—</div></div>
+        <div><div class="preview-label">Interest</div><div class="preview-val" id="prev-interest">—</div></div>
+        <div><div class="preview-label">Total Repay</div><div class="preview-val accent" id="prev-total">—</div></div>
+        <div><div class="preview-label" id="prev-inst-lbl">Weekly Inst.</div><div class="preview-val green" id="prev-inst">—</div></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(37,99,235,.2);"><div class="preview-label" id="prev-schedule-lbl">First Payment</div><div style="font-size:13px;color:var(--blue);font-weight:500;margin-top:2px;" id="prev-schedule">—</div></div>
+    </div>
+    <button class="btn-primary" onclick="disburseLoan()" style="margin-top:4px;">Disburse Loan →</button>
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- MY LOANS -->
+<div class="screen" id="screen-loans">
+  <div style="padding-top:4px;">
+    <div class="section-title">My Loan Book</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="my-total">K0</div><div class="stat-lbl">Portfolio</div></div>
+      <div class="stat-card"><div class="stat-val" id="my-current">0%</div><div class="stat-lbl">Current</div></div>
+      <div class="stat-card"><div class="stat-val" id="my-par">0%</div><div class="stat-lbl">PAR30</div></div>
+    </div>
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" placeholder="Search loans..." oninput="renderMyLoans(this.value)"/>
+    </div>
+    <div id="my-loans-list"></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="screen" id="screen-summary">
+  <div style="padding-top:4px;">
+    <div class="section-title">Daily Summary</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="sum-collected">K0</div><div class="stat-lbl">Collected</div></div>
+      <div class="stat-card"><div class="stat-val" id="sum-disbursed">K0</div><div class="stat-lbl">Disbursed</div></div>
+      <div class="stat-card"><div class="stat-val" id="sum-txns">0</div><div class="stat-lbl">Txns</div></div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-top"><span>Daily Target</span><span id="target-pct">0%</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="target-fill" style="width:0%"></div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);"><span id="target-collected">K0 collected</span><span>K5,000 target</span></div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;">Today's Activity</div>
+    <div id="activity-list"></div>
+    <button onclick="exportReport()" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;color:var(--text2);font-size:14px;cursor:pointer;margin-top:12px;">⬇ Export Day Report</button>
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+</div><!-- end scroll area -->
+
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab('today',this)">
+    <div class="nav-icon">📅</div><div class="nav-label">Today</div>
+    <div class="nav-badge" id="due-badge" style="display:none;">0</div>
+  </div>
+  <div class="nav-item" onclick="switchTab('collect',this)"><div class="nav-icon">💰</div><div class="nav-label">Collect</div></div>
+  <div class="nav-item" onclick="switchTab('disburse',this)"><div class="nav-icon">🏦</div><div class="nav-label">Disburse</div></div>
+  <div class="nav-item" onclick="switchTab('loans',this)"><div class="nav-icon">📋</div><div class="nav-label">Loans</div></div>
+  <div class="nav-item" onclick="switchTab('summary',this)"><div class="nav-icon">📊</div><div class="nav-label">Summary</div></div>
+</div>
+
+<!-- OFFICER MODAL -->
+<div class="modal-overlay" id="officer-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Select Your Name</div>
+    <div class="modal-sub" id="officer-modal-sub">Choose your name from the list below</div>
+    <div id="officer-list"></div>
+    <button class="btn-secondary" onclick="closeModal('officer-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- QUICK COLLECT MODAL -->
+<div class="modal-overlay" id="quick-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="qm-title">Collect Payment</div>
+    <div id="qm-body" style="margin-bottom:12px;"></div>
+    <input class="amount-input" type="number" inputmode="decimal" id="qm-amount" placeholder="0"/>
+    <div class="suggest-btns" id="qm-suggest"></div>
+    <label class="fl">Payment Method</label>
+    <select class="fi fi-sel" id="qm-method">
+      <option value="cash">Cash</option>
+      <option value="mobile_money">Mobile Money (Airtel / MTN)</option>
+      <option value="bank">Bank Transfer</option>
+    </select>
+    <button class="btn-primary" onclick="confirmCollect()" style="margin-top:4px;">✓ Confirm Payment</button>
+    <button class="btn-secondary" onclick="closeModal('quick-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+// ════════════════════════════════════════════
+// ZILIKO CREDIT EXPRESS — FIREBASE CONFIG
+// ════════════════════════════════════════════
+const ZILIKO_CONFIG = {
+  apiKey: "AIzaSyAarzJuvVYoZ0fW2IOau-IJyQ3HLHNjVYw",
+  authDomain: "ziliko-credit-express.firebaseapp.com",
+  databaseURL: "https://ziliko-credit-express-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ziliko-credit-express",
+  storageBucket: "ziliko-credit-express.firebasestorage.app",
+  messagingSenderId: "405935937112",
+  appId: "1:405935937112:web:c8f0d57907752daf9b5c2d"
+};
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+let db = null;
+let allLoans = [];
+let allActivity = [];
+let allOfficers = []; // ← loaded ONLY from Firebase officers node
+let currentOfficer = localStorage.getItem('ziliko_officer') || null;
+let selectedBorrower = null;
+let quickLoan = null;
+let selectedDay = null;
+let capturedPhoto = null;
+let loanType = 'weekly';
+let isConnected = false;
+
+// ════════════════════════════════════════════
+// BOOT — auto-connect to Firebase
+// ════════════════════════════════════════════
+setTimeout(() => {
+  document.getElementById('splash').style.opacity = '0';
+  document.getElementById('splash').style.transition = 'opacity .4s';
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app-loading').style.display = 'flex';
+    initFirebase();
+    buildDayChips();
+  }, 400);
+}, 1800);
+
+function initFirebase() {
+  try {
+    if (firebase.apps.length) firebase.app().delete();
+  } catch(e) {}
+  try {
+    firebase.initializeApp(ZILIKO_CONFIG);
+    db = firebase.database();
+
+    // Test connection
+    db.ref('.info/connected').on('value', snap => {
+      isConnected = snap.val() === true;
+      if (isConnected) {
+        document.getElementById('sync-pill').style.display = 'inline-flex';
+        document.getElementById('app-loading').style.display = 'none';
+        toast('Connected to ZILIKO database ⚡', 'green');
+      }
+    });
+
+    // ── CRITICAL FIX: Load officers ONLY from Firebase ──
+    // Do NOT use any hardcoded officer names
+    db.ref('officers').on('value', snap => {
+      const raw = snap.val() || {};
+      // Extract officer names from Firebase officers node
+      allOfficers = Object.values(raw).map(o => o.name || o).filter(Boolean);
+      // If officer modal is open, refresh it
+      if (document.getElementById('officer-modal').classList.contains('open')) {
+        populateOfficerModal();
+      }
+      // Update chip if current officer is still valid
+      if (currentOfficer) {
+        document.getElementById('officer-chip').textContent = currentOfficer + ' ▾';
+      }
+    });
+
+    // ── Load loans ──
+    db.ref('loans').on('value', snap => {
+      allLoans = Object.values(snap.val() || {});
+      renderTodayList();
+      renderMyLoans('');
+      updateBadge();
+    });
+
+    // ── Load activity ──
+    db.ref('activity').limitToLast(500).on('value', snap => {
+      allActivity = Object.values(snap.val() || {})
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+      renderTodayList();
+    });
+
+    // Prompt officer selection if none saved
+    if (!currentOfficer) {
+      setTimeout(() => openOfficerModal(), 1500);
+    } else {
+      document.getElementById('officer-chip').textContent = currentOfficer + ' ▾';
+    }
+
+  } catch(e) {
+    document.getElementById('app-loading').style.display = 'none';
+    toast('Connection error: ' + e.message, 'red');
+    console.error('Firebase error:', e);
+  }
+}
+
+// ════════════════════════════════════════════
+// OFFICERS — pulled 100% from Firebase
+// ════════════════════════════════════════════
+function openOfficerModal() {
+  populateOfficerModal();
+  document.getElementById('officer-modal').classList.add('open');
+}
+
+function populateOfficerModal() {
+  const list = document.getElementById('officer-list');
+  if (!allOfficers.length) {
+    document.getElementById('officer-modal-sub').textContent =
+      'No officers found. Ask head office to add officers in the Dashboard first.';
+    list.innerHTML = `<div class="empty" style="padding:20px 0;">
+      <div class="empty-icon" style="font-size:28px;">👤</div>
+      <div class="empty-text">No officers have been added yet.<br>Head office must add officers<br>via the Dashboard first.</div>
+    </div>`;
+    return;
+  }
+  document.getElementById('officer-modal-sub').textContent =
+    'Choose your name from the list below';
+  list.innerHTML = allOfficers.map(name => `
+    <div class="officer-option" onclick="setOfficer('${name.replace(/'/g, "\\'")}')">
+      <span style="font-size:15px;font-weight:500;${currentOfficer === name ? 'color:var(--blue);' : ''}">${name}</span>
+      ${currentOfficer === name ? '<span style="color:var(--green);font-size:16px;">✓</span>' : ''}
+    </div>`).join('');
+}
+
+function setOfficer(name) {
+  currentOfficer = name;
+  localStorage.setItem('ziliko_officer', name);
+  document.getElementById('officer-chip').textContent = name + ' ▾';
+  closeModal('officer-modal');
+  renderTodayList();
+  renderMyLoans('');
+  updateBadge();
+  toast('Officer: ' + name, 'green');
+}
+
+// ════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════
+function switchTab(tab, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + tab).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('scroll-area').scrollTop = 0;
+  if (tab === 'loans') renderMyLoans('');
+  if (tab === 'summary') renderSummary();
+}
+
+// ════════════════════════════════════════════
+// DAY CHIPS
+// ════════════════════════════════════════════
+function buildDayChips() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const todStr = t.toISOString().split('T')[0];
+  selectedDay = todStr;
+  const c = document.getElementById('day-scroll');
+  c.innerHTML = '';
+  for (let i = -3; i <= 9; i++) {
+    const d = new Date(t); d.setDate(t.getDate() + i);
+    const ds = d.toISOString().split('T')[0];
+    const isToday = i === 0;
+    const lbl = isToday ? 'TODAY' : DAYS[d.getDay()].slice(0,3).toUpperCase() + ' ' + d.getDate();
+    const chip = document.createElement('button');
+    chip.className = 'day-chip' + (isToday ? ' today' : '') + (isToday ? ' active' : '');
+    chip.textContent = lbl;
+    chip.dataset.date = ds;
+    chip.onclick = () => {
+      selectedDay = ds;
+      document.querySelectorAll('.day-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderTodayList();
+    };
+    c.appendChild(chip);
+  }
+}
+
+// ════════════════════════════════════════════
+// TODAY LIST
+// ════════════════════════════════════════════
+function loanPayDay(l) {
+  return l.payDayOfWeek !== undefined ? l.payDayOfWeek : new Date(l.date + 'T00:00:00').getDay();
+}
+function paidOn(id, ds) {
+  return allActivity.some(a => a.id === id && a.type === 'payment' && a.time?.startsWith(ds));
+}
+function missedOn(id, ds) {
+  return allActivity.some(a => a.id === id && a.type === 'missed' && a.time?.startsWith(ds));
+}
+function promisedOn(id, ds) {
+  return allActivity.some(a => a.id === id && a.type === 'promise' && a.time?.startsWith(ds));
+}
+function initials(n) {
+  return (n || '').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+}
+function avatarEl(l, sz='collect') {
+  if (l.photo) return `<div class="${sz}-avatar"><img src="${l.photo}" alt="${l.borrower}"/></div>`;
+  const bg = l.status === 'par30' ? 'var(--amber)' : l.status === 'default' ? 'var(--red)' : 'var(--blue)';
+  return `<div class="${sz}-avatar" style="background:${bg};">${initials(l.borrower)}</div>`;
+}
+
+function renderTodayList() {
+  const ds = selectedDay || today();
+  const target = new Date(ds + 'T00:00:00');
+
+  // Filter to current officer's loans only
+  const myLoans = currentOfficer
+    ? allLoans.filter(l => l.officer === currentOfficer)
+    : allLoans;
+
+  const weekly = myLoans.filter(l =>
+    l.loanType !== 'salary' &&
+    l.status !== 'default' &&
+    loanPayDay(l) === target.getDay() &&
+    (target - new Date(l.date + 'T00:00:00')) / 86400000 >= 7
+  );
+  const salary = myLoans.filter(l =>
+    l.loanType === 'salary' &&
+    l.status !== 'default' &&
+    l.repaymentSchedule?.includes(ds)
+  );
+  const due = [...weekly, ...salary];
+
+  const paid = due.filter(l => paidOn(l.id, ds)).length;
+  const missed = due.filter(l => missedOn(l.id, ds)).length;
+  const paidAmt = allActivity
+    .filter(a => a.type === 'payment' && a.time?.startsWith(ds) && (!currentOfficer || a.officer === currentOfficer))
+    .reduce((s, a) => s + Number(a.amount || 0), 0);
+
+  const pct = due.length ? Math.round(paid / due.length * 100) : 0;
+  const circ = 188.5;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ - (circ * pct / 100);
+  document.getElementById('ring-pct').textContent = pct + '%';
+  const f = v => v >= 1000 ? 'K' + (v / 1000).toFixed(1) + 'K' : 'K' + v.toFixed(0);
+  document.getElementById('hero-amt').textContent = f(paidAmt);
+  document.getElementById('h-paid').textContent = paid;
+  document.getElementById('h-due').textContent = due.length;
+  document.getElementById('h-miss').textContent = missed;
+
+  if (ds === today()) {
+    const remaining = due.filter(l => !paidOn(l.id, ds) && !missedOn(l.id, ds)).length;
+    const b = document.getElementById('due-badge');
+    b.textContent = remaining;
+    b.style.display = remaining > 0 ? '' : 'none';
+  }
+
+  const list = document.getElementById('today-list');
+  if (!currentOfficer) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">👆</div><div class="empty-text">Tap your name above to select your officer profile</div></div>`;
+    return;
+  }
+  if (!due.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No payments due on this day</div></div>`;
+    return;
+  }
+
+  const sorted = [...due].sort((a, b) =>
+    (paidOn(a.id, ds) ? 1 : 0) - (paidOn(b.id, ds) ? 1 : 0) ||
+    a.borrower.localeCompare(b.borrower)
+  );
+
+  list.innerHTML = sorted.map(l => {
+    const isPaid = paidOn(l.id, ds), isMissed = missedOn(l.id, ds), isPromised = promisedOn(l.id, ds);
+    const isSal = l.loanType === 'salary';
+    const inst = isSal ? (l.monthlyInstalment || l.weeklyInstalment || 0) : (l.weeklyInstalment || 0);
+    const payAct = allActivity.find(a => a.id === l.id && a.type === 'payment' && a.time?.startsWith(ds));
+    let pill, amtClass = '';
+    if (isPaid) { pill = `<span class="status-pill sp-paid">✓ PAID K${Number(payAct?.amount || 0).toLocaleString()}</span>`; amtClass = 'paid'; }
+    else if (isMissed) { pill = `<span class="status-pill sp-missed">MISSED</span>`; }
+    else if (isPromised) { pill = `<span class="status-pill sp-promise">PROMISED</span>`; }
+    else { pill = `<span class="status-pill ${isSal ? 'sp-salary' : 'sp-due'}">${isSal ? '💼 SALARY DUE' : 'DUE TODAY'}</span>`; }
+
+    return `<div class="collect-card${isSal ? ' salary-type' : ''}${isPaid ? ' paid' : ''}${isMissed ? ' overdue' : ''}">
+      <div class="cc-top">
+        <div style="display:flex;gap:10px;align-items:center;">
+          ${avatarEl(l)}
+          <div class="cc-info">
+            <div class="cc-name">${l.borrower}</div>
+            <div class="cc-meta">${l.id} · ${isSal ? 'Salary Advance' : DAYS[loanPayDay(l)] + 's'}</div>
+          </div>
+        </div>
+        ${pill}
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:3px;">${isSal ? 'MONTHLY INSTALMENT' : 'WEEKLY INSTALMENT'}</div>
+          <div class="cc-amount ${amtClass}${isSal && !isPaid ? ' salary-c' : ''}">K${inst.toLocaleString()}</div>
+        </div>
+        <div style="text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);">
+          <div>BAL: K${Number(l.amount).toLocaleString()}</div>
+          <div style="margin-top:2px;">DPD: ${l.dpd || 0}d</div>
+        </div>
+      </div>
+      ${!isPaid ? `<div class="cc-actions">
+        <button class="cc-btn${isSal ? ' purple' : ''}" onclick="openQuickCollect('${l.id}','${ds}')">COLLECT K${inst.toLocaleString()}</button>
+        <button class="cc-btn-sm amber" onclick="markPromise('${l.id}','${ds}')">PROMISE</button>
+        <button class="cc-btn-sm red" onclick="markMissed('${l.id}','${ds}')">MISSED</button>
+      </div>` : `<div style="margin-top:10px;font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace;">✓ Payment recorded successfully</div>`}
+    </div>`;
+  }).join('');
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function updateBadge() {
+  const ds = today(), target = new Date(ds + 'T00:00:00');
+  const myLoans = currentOfficer ? allLoans.filter(l => l.officer === currentOfficer) : allLoans;
+  const weekly = myLoans.filter(l =>
+    l.loanType !== 'salary' && l.status !== 'default' &&
+    loanPayDay(l) === target.getDay() &&
+    (target - new Date(l.date + 'T00:00:00')) / 86400000 >= 7
+  );
+  const salary = myLoans.filter(l =>
+    l.loanType === 'salary' && l.status !== 'default' && l.repaymentSchedule?.includes(ds)
+  );
+  const rem = [...weekly, ...salary].filter(l => !paidOn(l.id, ds)).length;
+  const b = document.getElementById('due-badge');
+  b.textContent = rem;
+  b.style.display = rem > 0 ? '' : 'none';
+}
+
+// ════════════════════════════════════════════
+// QUICK COLLECT
+// ════════════════════════════════════════════
+function openQuickCollect(loanId, ds) {
+  const l = allLoans.find(x => x.id === loanId); if (!l) return;
+  quickLoan = { loan: l, ds };
+  document.getElementById('qm-title').textContent = l.borrower;
+  document.getElementById('qm-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:8px;padding:12px;">
+      ${avatarEl(l, 'lc')}
+      <div>
+        <div style="font-weight:600;font-size:14px;">${l.borrower}</div>
+        <div style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;">${l.id} · Bal: K${Number(l.amount).toLocaleString()}</div>
+      </div>
+    </div>`;
+  const inst = l.weeklyInstalment || 0;
+  document.getElementById('qm-amount').value = inst || '';
+  document.getElementById('qm-suggest').innerHTML = [inst, Math.round(inst * .5), Number(l.amount)]
+    .filter(v => v > 0)
+    .map(v => `<div class="suggest-btn" onclick="document.getElementById('qm-amount').value=${v}">K${v.toLocaleString()}</div>`)
+    .join('');
+  document.getElementById('quick-modal').classList.add('open');
+}
+
+async function confirmCollect() {
+  if (!quickLoan) return;
+  const { loan, ds } = quickLoan;
+  const amt = parseFloat(document.getElementById('qm-amount').value);
+  const method = document.getElementById('qm-method').value;
+  if (!amt || amt <= 0) { toast('Enter a valid amount', 'red'); return; }
+  if (!db) { toast('Not connected to Firebase', 'red'); return; }
+  const newBal = Math.max(0, Number(loan.amount) - amt);
+  const newStatus = newBal <= 0 ? 'current' : (loan.dpd > 30 ? 'par30' : 'current');
+  await db.ref('loans/' + loan.id).update({ amount: newBal, dpd: 0, status: newStatus });
+  await db.ref('activity').push({ type: 'payment', borrower: loan.borrower, id: loan.id, amount: amt, method, officer: currentOfficer, time: new Date().toISOString() });
+  closeModal('quick-modal');
+  toast(`✓ K${amt.toLocaleString()} collected from ${loan.borrower}`, 'green');
+  quickLoan = null;
+}
+
+async function markMissed(id, ds) {
+  const l = allLoans.find(x => x.id === id); if (!l) return;
+  if (!db) { toast('Not connected to Firebase', 'red'); return; }
+  const newDpd = (Number(l.dpd) || 0) + 7;
+  await db.ref('loans/' + id).update({ dpd: newDpd, status: newDpd >= 30 ? 'par30' : 'current' });
+  await db.ref('activity').push({ type: 'missed', borrower: l.borrower, id, officer: currentOfficer, time: new Date().toISOString() });
+  toast(`⚠ Missed recorded for ${l.borrower}`, 'red');
+}
+
+async function markPromise(id, ds) {
+  const l = allLoans.find(x => x.id === id); if (!l) return;
+  if (!db) { toast('Not connected to Firebase', 'red'); return; }
+  await db.ref('activity').push({ type: 'promise', borrower: l.borrower, id, officer: currentOfficer, time: new Date().toISOString() });
+  toast(`Promise recorded for ${l.borrower}`);
+}
+
+// ════════════════════════════════════════════
+// COLLECT TAB
+// ════════════════════════════════════════════
+function searchBorrower(q) {
+  const res = document.getElementById('search-results');
+  if (!q.trim()) { res.style.display = 'none'; return; }
+  const my = currentOfficer ? allLoans.filter(l => l.officer === currentOfficer) : allLoans;
+  const filtered = my.filter(l =>
+    l.borrower?.toLowerCase().includes(q.toLowerCase()) ||
+    l.id?.toLowerCase().includes(q.toLowerCase())
+  ).slice(0, 6);
+  if (!filtered.length) { res.style.display = 'none'; return; }
+  res.style.display = 'block';
+  res.innerHTML = filtered.map(l => `
+    <div class="search-item" onclick="selectBorrower('${l.id}')">
+      <div>
+        <div style="font-size:14px;font-weight:500;color:var(--text);">${l.borrower}</div>
+        <div style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;">${l.id} · K${Number(l.amount).toLocaleString()}</div>
+      </div>
+      <span class="status-pill sp-${l.status}">${l.status?.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+function selectBorrower(id) {
+  const l = allLoans.find(x => x.id === id); if (!l) return;
+  selectedBorrower = l;
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('search-input').value = l.borrower;
+  const card = document.getElementById('selected-card'); card.style.display = 'block';
+  document.getElementById('sel-name').textContent = l.borrower;
+  document.getElementById('sel-id').textContent = l.id;
+  document.getElementById('sel-amt').textContent = 'K' + Number(l.amount).toLocaleString();
+  document.getElementById('sel-inst').textContent = l.weeklyInstalment ? 'K' + l.weeklyInstalment.toLocaleString() : '—';
+  document.getElementById('sel-dpd').textContent = (l.dpd || 0) + 'd';
+  const sp = document.getElementById('sel-status');
+  sp.textContent = l.status?.toUpperCase(); sp.className = 'status-pill sp-' + l.status;
+  document.getElementById('collect-amt').value = l.weeklyInstalment || '';
+}
+
+async function recordPayment() {
+  if (!currentOfficer) { toast('Select your name first', 'red'); openOfficerModal(); return; }
+  if (!selectedBorrower) { toast('Select a borrower first', 'red'); return; }
+  if (!db) { toast('Not connected to Firebase', 'red'); return; }
+  const amt = parseFloat(document.getElementById('collect-amt').value);
+  if (!amt || amt <= 0) { toast('Enter a valid amount', 'red'); return; }
+  const method = document.getElementById('collect-method').value;
+  const notes = document.getElementById('collect-notes').value;
+  const newBal = Math.max(0, Number(selectedBorrower.amount) - amt);
+  await db.ref('loans/' + selectedBorrower.id).update({ amount: newBal, dpd: 0, status: newBal <= 0 ? 'current' : selectedBorrower.status });
+  await db.ref('activity').push({ type: 'payment', borrower: selectedBorrower.borrower, id: selectedBorrower.id, amount: amt, method, notes, officer: currentOfficer, time: new Date().toISOString() });
+  toast(`✓ K${amt.toLocaleString()} recorded`, 'green');
+  selectedBorrower = null;
+  document.getElementById('selected-card').style.display = 'none';
+  document.getElementById('search-input').value = '';
+  document.getElementById('collect-amt').value = '';
+  document.getElementById('collect-notes').value = '';
+}
+
+// ════════════════════════════════════════════
+// DISBURSE
+// ════════════════════════════════════════════
+let currentLoanType = 'weekly';
+
+function setLoanType(t) {
+  currentLoanType = t;
+  document.getElementById('btn-weekly').className = 'type-btn' + (t === 'weekly' ? ' active' : '');
+  document.getElementById('btn-salary').className = 'type-btn' + (t === 'salary' ? ' active active-purple' : '');
+  document.getElementById('weekly-fields').style.display = t === 'weekly' ? 'block' : 'none';
+  document.getElementById('salary-fields').style.display = t === 'salary' ? 'block' : 'none';
+  document.getElementById('prev-inst-lbl').textContent = t === 'weekly' ? 'Weekly Inst.' : 'Monthly Inst.';
+  document.getElementById('prev-schedule-lbl').textContent = t === 'weekly' ? 'First Payment' : 'First Salary Date';
+  previewLoan();
+}
+
+function openCamera() { document.getElementById('photo-cam').click(); }
+function openGallery() { document.getElementById('photo-gal').click(); }
+
+function handlePhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'), MAX = 300;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+      else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      capturedPhoto = c.toDataURL('image/jpeg', .75);
+      document.getElementById('photo-thumb').innerHTML = `<img src="${capturedPhoto}" alt="photo"/>`;
+      document.getElementById('photo-box').classList.add('has-photo');
+      document.getElementById('photo-title').textContent = '✓ Photo captured';
+      document.getElementById('photo-title').style.color = 'var(--green)';
+      document.getElementById('photo-sub').textContent = 'Saved with loan record';
+      document.getElementById('photo-btns').innerHTML = `<button class="photo-btn primary" onclick="event.stopPropagation();openCamera()">📷 Retake</button><button class="photo-btn danger" onclick="event.stopPropagation();clearPhoto()">✕ Remove</button>`;
+      toast('Photo captured ✓', 'green');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file); input.value = '';
+}
+
+function clearPhoto() {
+  capturedPhoto = null;
+  document.getElementById('photo-thumb').innerHTML = '<span>📷</span><span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;color:var(--text3);">TAP</span>';
+  document.getElementById('photo-box').classList.remove('has-photo');
+  document.getElementById('photo-title').textContent = 'Add Client Photo';
+  document.getElementById('photo-title').style.color = '';
+  document.getElementById('photo-sub').textContent = 'Take a face photo for identity verification';
+  document.getElementById('photo-btns').innerHTML = `<button class="photo-btn primary" onclick="event.stopPropagation();openCamera()">📷 Camera</button><button class="photo-btn" onclick="event.stopPropagation();openGallery()">🖼 Gallery</button>`;
+}
+
+function nextSalaryDate(day) {
+  const t = new Date(), d = new Date(t.getFullYear(), t.getMonth(), day);
+  if (d <= t) d.setMonth(d.getMonth() + 1);
+  return d.toISOString().split('T')[0];
+}
+function addMonths(ds, n) {
+  const d = new Date(ds + 'T00:00:00'); d.setMonth(d.getMonth() + n);
+  return d.toISOString().split('T')[0];
+}
+
+function previewLoan() {
+  const amt = parseFloat(document.getElementById('dis-amount').value);
+  if (!amt || amt <= 0) { document.getElementById('loan-preview').style.display = 'none'; return; }
+  const rate = parseFloat(document.getElementById('dis-rate').value) / 100;
+  const interest = amt * rate, total = amt + interest;
+  document.getElementById('prev-principal').textContent = 'K' + amt.toLocaleString();
+  document.getElementById('prev-interest').textContent = 'K' + interest.toFixed(0);
+  document.getElementById('prev-total').textContent = 'K' + total.toFixed(0);
+  if (currentLoanType === 'weekly') {
+    const term = parseInt(document.getElementById('dis-term').value);
+    const weekly = Math.ceil(total / term);
+    const first = new Date(); first.setDate(first.getDate() + 7);
+    document.getElementById('prev-inst').textContent = 'K' + weekly.toLocaleString();
+    document.getElementById('prev-schedule').textContent = `Every ${DAYS[new Date().getDay()]} · First: ${first.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`;
+  } else {
+    const months = parseInt(document.getElementById('dis-months').value);
+    const salaryDay = parseInt(document.getElementById('dis-salary-day').value);
+    const monthly = Math.ceil(total / months);
+    const firstDate = nextSalaryDate(salaryDay);
+    document.getElementById('prev-inst').textContent = 'K' + monthly.toLocaleString();
+    document.getElementById('prev-schedule').textContent = `${months} month${months > 1 ? 's' : ''} · First: ${new Date(firstDate + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+  }
+  document.getElementById('loan-preview').style.display = 'block';
+}
+
+async function disburseLoan() {
+  if (!currentOfficer) { toast('Select your name first', 'red'); openOfficerModal(); return; }
+  if (!db) { toast('Not connected to Firebase', 'red'); return; }
+  const name = document.getElementById('dis-name').value.trim();
+  const amt = parseFloat(document.getElementById('dis-amount').value);
+  if (!name) { toast('Enter borrower name', 'red'); return; }
+  if (!amt || amt <= 0) { toast('Enter loan amount', 'red'); return; }
+  const rate = parseFloat(document.getElementById('dis-rate').value) / 100;
+  const total = amt * (1 + rate);
+  const now = new Date();
+  const newId = 'L' + Date.now().toString(36).toUpperCase();
+
+  let loan = {
+    id: newId, borrower: name, amount: amt, officer: currentOfficer,
+    dpd: 0, status: 'current', loanType: currentLoanType,
+    date: now.toISOString().split('T')[0],
+    rate: parseFloat(document.getElementById('dis-rate').value),
+    totalRepayable: Math.ceil(total),
+    photo: capturedPhoto || null,
+    phone: document.getElementById('dis-phone').value,
+    nrc: document.getElementById('dis-nrc').value,
+    purpose: document.getElementById('dis-purpose').value,
+    collateral: document.getElementById('dis-collateral').value,
+  };
+
+  if (currentLoanType === 'weekly') {
+    const term = parseInt(document.getElementById('dis-term').value);
+    const weekly = Math.ceil(total / term);
+    loan = { ...loan, term, payDayOfWeek: now.getDay(), weeklyInstalment: weekly };
+  } else {
+    const months = parseInt(document.getElementById('dis-months').value);
+    const salaryDay = parseInt(document.getElementById('dis-salary-day').value);
+    const monthly = Math.ceil(total / months);
+    const first = nextSalaryDate(salaryDay);
+    const schedule = Array.from({ length: months }, (_, i) => addMonths(first, i));
+    loan = { ...loan, term: months, salaryDay, monthlyInstalment: monthly, weeklyInstalment: monthly, nextSalaryDate: first, repaymentSchedule: schedule, employer: document.getElementById('dis-employer').value || '', empNumber: document.getElementById('dis-empnum').value || '' };
+  }
+
+  // Save to Firebase
+  await db.ref('loans/' + loan.id).set(loan);
+  await db.ref('activity').push({ type: 'disburse', borrower: name, id: newId, amount: amt, loanType: currentLoanType, officer: currentOfficer, time: new Date().toISOString() });
+
+  toast(`✓ K${amt.toLocaleString()} disbursed to ${name}`, 'green');
+  ['dis-name','dis-phone','dis-nrc','dis-collateral','dis-amount','dis-employer','dis-empnum'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('loan-preview').style.display = 'none';
+  clearPhoto();
+}
+
+// ════════════════════════════════════════════
+// MY LOANS
+// ════════════════════════════════════════════
+function renderMyLoans(q = '') {
+  const my = currentOfficer ? allLoans.filter(l => l.officer === currentOfficer) : allLoans;
+  const filtered = q ? my.filter(l =>
+    l.borrower?.toLowerCase().includes(q.toLowerCase()) ||
+    l.id?.toLowerCase().includes(q.toLowerCase())
+  ) : my;
+  const total = my.reduce((s, l) => s + Number(l.amount), 0);
+  const curr = my.filter(l => l.status === 'current').reduce((s, l) => s + Number(l.amount), 0);
+  const par30 = my.filter(l => l.status === 'par30').reduce((s, l) => s + Number(l.amount), 0);
+  const f = v => v >= 1000000 ? 'K' + (v / 1000000).toFixed(1) + 'M' : v >= 1000 ? 'K' + (v / 1000).toFixed(0) + 'K' : 'K' + v.toFixed(0);
+  document.getElementById('my-total').textContent = f(total);
+  document.getElementById('my-current').textContent = total ? (curr / total * 100).toFixed(0) + '%' : '0%';
+  document.getElementById('my-par').textContent = total ? (par30 / total * 100).toFixed(0) + '%' : '0%';
+  const list = document.getElementById('my-loans-list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">${my.length ? 'No matches' : 'No loans yet'}</div></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(l => `
+    <div class="loan-card">
+      <div class="lc-row">
+        ${avatarEl(l, 'lc')}
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">
+            <div><div class="lc-name">${l.borrower}</div><div class="lc-id">${l.id} · Pays every ${DAYS[loanPayDay(l)]}</div></div>
+            <span class="status-pill sp-${l.status}" style="flex-shrink:0;">${l.status?.toUpperCase()}</span>
+          </div>
+        </div>
+      </div>
+      <div class="lc-metrics">
+        <div><div class="lc-metric-lbl">Balance</div><div class="lc-metric-val">K${Number(l.amount).toLocaleString()}</div></div>
+        <div><div class="lc-metric-lbl">Weekly</div><div class="lc-metric-val" style="color:var(--blue)">K${(l.weeklyInstalment || 0).toLocaleString()}</div></div>
+        <div><div class="lc-metric-lbl">DPD</div><div class="lc-metric-val" style="${l.dpd > 90 ? 'color:var(--red)' : l.dpd > 30 ? 'color:var(--amber)' : ''}">${l.dpd || 0}d</div></div>
+      </div>
+      <div class="lc-actions">
+        <button class="lc-btn green" onclick="openQuickCollect('${l.id}','${today()}')">COLLECT</button>
+        <button class="lc-btn blue" onclick="markPromise('${l.id}','${today()}')">PROMISE</button>
+        <button class="lc-btn red" onclick="markMissed('${l.id}','${today()}')">MISSED</button>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════════
+function renderSummary() {
+  const ds = today();
+  const acts = allActivity.filter(a => a.time?.startsWith(ds) && (!currentOfficer || a.officer === currentOfficer));
+  const collected = acts.filter(a => a.type === 'payment').reduce((s, a) => s + Number(a.amount || 0), 0);
+  const disbursed = acts.filter(a => a.type === 'disburse').reduce((s, a) => s + Number(a.amount || 0), 0);
+  const f = v => v >= 1000 ? 'K' + (v / 1000).toFixed(1) + 'K' : 'K' + v.toFixed(0);
+  document.getElementById('sum-collected').textContent = f(collected);
+  document.getElementById('sum-disbursed').textContent = f(disbursed);
+  document.getElementById('sum-txns').textContent = acts.length;
+  const pct = Math.min(100, (collected / 5000 * 100)).toFixed(0);
+  document.getElementById('target-pct').textContent = pct + '%';
+  document.getElementById('target-fill').style.width = pct + '%';
+  document.getElementById('target-collected').textContent = 'K' + collected.toLocaleString() + ' collected';
+  const aList = document.getElementById('activity-list');
+  if (!acts.length) { aList.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No activity today yet</div></div>'; return; }
+  const icons = { payment: '💰', disburse: '🏦', missed: '⚠️', promise: '🤝' };
+  const colors = { payment: 'var(--green)', disburse: 'var(--blue)', missed: 'var(--red)', promise: 'var(--amber)' };
+  aList.innerHTML = acts.slice(0, 12).map(a => `
+    <div class="activity-item">
+      <div class="act-icon" style="background:${colors[a.type] || 'var(--bg3)'}18;"><span>${icons[a.type] || '📌'}</span></div>
+      <div style="flex:1;min-width:0;"><div class="act-name">${a.borrower}</div><div class="act-meta">${a.type?.toUpperCase()} · ${a.time?.split('T')[1]?.slice(0, 5)}</div></div>
+      <div class="act-amt" style="color:${colors[a.type] || 'var(--text2)'};">${a.amount ? 'K' + Number(a.amount).toLocaleString() : '—'}</div>
+    </div>`).join('');
+}
+
+function exportReport() {
+  const ds = today();
+  const acts = allActivity.filter(a => a.time?.startsWith(ds) && a.officer === currentOfficer);
+  const text = acts.map(a => `${a.time?.split('T')[1]?.slice(0, 5)} | ${(a.type || '').padEnd(8)} | ${(a.borrower || '').padEnd(20)} | K${(a.amount || 0).toLocaleString()}`).join('\n');
+  const blob = new Blob([`ZILIKO CREDIT EXPRESS — FIELD REPORT\nOfficer: ${currentOfficer}\nDate: ${ds}\n\n${text || 'No activity today.'}`], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ziliko-${(currentOfficer || 'officer').replace(' ', '_')}-${ds}.txt`; a.click();
+}
+
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._to); t._to = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

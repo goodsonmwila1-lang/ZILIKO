@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ZILIKO · Branch Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --bg4:#2d333b;
+  --border:#30363d; --border2:#444c56;
+  --blue:#2563eb; --blue2:#1d4ed8; --blue-glow:rgba(37,99,235,.22);
+  --green:#10b981; --green-dim:rgba(16,185,129,.12);
+  --red:#ef4444; --red-dim:rgba(239,68,68,.1);
+  --amber:#f59e0b; --amber-dim:rgba(245,158,11,.1);
+  --purple:#8b5cf6; --purple-dim:rgba(139,92,246,.1);
+  --text:#e6edf3; --text2:#8b949e; --text3:#6e7681;
+  --r:12px; --r-sm:8px;
+  --safe-bottom:env(safe-area-inset-bottom,16px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;max-width:540px;margin:0 auto;display:flex;flex-direction:column;}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+.sp-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:4px;color:#fff;}
+.sp-tag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;}
+.sp-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-top:4px;}
+.sp-bar{width:100px;height:2px;background:var(--bg3);border-radius:2px;margin-top:16px;overflow:hidden;}
+.sp-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:2px;animation:spfill 1.8s ease forwards;}
+@keyframes spfill{to{width:100%;}}
+
+/* ── SETUP SHEET ── */
+#setup-sheet{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;}
+#setup-sheet.open{opacity:1;pointer-events:all;}
+.sheet{background:var(--bg2);border-radius:20px 20px 0 0;padding:26px 20px calc(26px + var(--safe-bottom));width:100%;border-top:1px solid var(--border);}
+.sheet-handle{width:36px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 18px;}
+.sheet-logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#fff;margin-bottom:2px;}
+.sheet-sub{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5;}
+.fl{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:5px;}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 13px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;margin-bottom:11px;transition:border-color .2s;}
+.fi:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(139,92,246,.2);}
+.fi::placeholder{color:var(--text3);}
+.fi-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;font-family:'Inter',sans-serif;font-size:14px;}
+.fi-sel option{background:var(--bg2);}
+.btn-connect{width:100%;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:var(--r-sm);padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.btn-connect:active{opacity:.85;}
+.btn-skip{width:100%;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px;}
+
+/* ── HEADER ── */
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.h-left{display:flex;flex-direction:column;gap:1px;}
+.h-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;}
+.h-branch{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:1px;text-transform:uppercase;}
+.h-right{display:flex;align-items:center;gap:10px;}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(16,185,129,.25);border-radius:16px;padding:4px 9px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1px;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.h-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);}
+
+/* ── SCROLL ── */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding:7px 4px calc(7px + var(--safe-bottom));flex-shrink:0;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;cursor:pointer;border-radius:8px;transition:all .2s;}
+.nav-item.active .nav-icon{color:var(--purple);}
+.nav-item.active .nav-label{color:var(--purple);}
+.nav-icon{font-size:19px;color:var(--text3);}
+.nav-label{font-size:9px;font-weight:500;color:var(--text3);letter-spacing:.5px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;}
+
+/* ── SCREENS ── */
+.screen{display:none;padding:14px 16px;}
+.screen.active{display:block;}
+
+/* ── SECTION TITLES ── */
+.sec-title{font-size:18px;font-weight:700;margin-bottom:2px;}
+.sec-sub{font-size:12px;color:var(--text2);margin-bottom:14px;}
+.sec-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--purple));}
+.kpi-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:6px;}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);line-height:1;}
+.kpi-sub{font-size:11px;color:var(--text2);margin-top:4px;}
+
+/* ── PANELS ── */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.panel-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--purple);text-transform:uppercase;}
+
+/* ── BARS ── */
+.bar-wrap{margin-bottom:12px;}
+.bar-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;}
+.bar-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+
+/* ── COST FORM ── */
+.cost-form{display:flex;flex-direction:column;gap:0;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-add{background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:var(--r-sm);padding:13px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:4px;transition:opacity .2s;}
+.btn-add:active{opacity:.85;}
+
+/* ── COST TABLE ── */
+.cost-table{width:100%;border-collapse:collapse;font-size:12px;}
+.cost-table th{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);}
+.cost-table td{padding:9px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.cost-table tr:last-child td{border-bottom:none;}
+.cost-table tr:hover td{background:rgba(139,92,246,.05);}
+.del-btn{background:var(--red-dim);border:1px solid rgba(239,68,68,.2);color:var(--red);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer;font-family:'JetBrains Mono',monospace;}
+
+/* ── MONTH CHIPS ── */
+.month-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none;}
+.month-scroll::-webkit-scrollbar{display:none;}
+.month-chip{flex-shrink:0;padding:6px 13px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .2s;white-space:nowrap;}
+.month-chip.active{background:var(--purple);color:#fff;border-color:var(--purple);box-shadow:0 4px 12px rgba(139,92,246,.3);}
+
+/* ── P&L ── */
+.pl-section-title{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;margin-top:14px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.pl-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.pl-row:last-child{border-bottom:none;}
+.pl-row.total-row{padding-top:12px;border-top:1px solid var(--border2);margin-top:4px;}
+.pl-label{font-size:13px;color:var(--text);}
+.pl-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;}
+.pl-net-box{background:var(--bg3);border-radius:var(--r);padding:18px;text-align:center;margin-top:14px;}
+.pl-net-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:6px;}
+.pl-net-val{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;}
+.pl-net-sub{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;}
+
+/* ── LOAN TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(139,92,246,.04);}
+.mono{font-family:'JetBrains Mono',monospace;}
+.pill{display:inline-block;padding:2px 7px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;}
+.pill-current{background:var(--green-dim);color:var(--green);}
+.pill-par30{background:var(--amber-dim);color:var(--amber);}
+.pill-default{background:var(--red-dim);color:var(--red);}
+
+/* ── STATUS TABS ── */
+.status-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;}
+.status-tabs::-webkit-scrollbar{display:none;}
+.stab{padding:6px 13px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .2s;white-space:nowrap;}
+.stab.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+
+/* ── SCORECARD ── */
+.sc-period-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:14px;}
+.sc-period-row::-webkit-scrollbar{display:none;}
+.sc-pbtn{padding:6px 13px;border-radius:16px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.sc-pbtn.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+.sc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.sc-hd{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.sc-av{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;flex-shrink:0;}
+.sc-name{font-size:14px;font-weight:600;}
+.sc-sub{font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+.sc-stars{font-size:12px;margin-top:2px;}
+.sc-score{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;margin-left:auto;}
+.sc-score-sub{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text2);text-align:right;margin-top:1px;}
+.sc-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;text-align:right;margin-top:3px;}
+.sc-body{padding:12px 16px;}
+.sc-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc-kpi{background:var(--bg3);border-radius:7px;padding:9px 10px;}
+.sc-kpi-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:3px;}
+.sc-kpi-val{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;}
+.sc-kpi-sub{font-size:9px;color:var(--text2);margin-top:2px;}
+.sc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.sc-bar-lbl{font-size:11px;color:var(--text);min-width:115px;}
+.sc-bar-t{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.sc-bar-f{height:100%;border-radius:2px;transition:width .7s ease;}
+.sc-bar-p{font-family:'JetBrains Mono',monospace;font-size:9px;min-width:28px;text-align:right;}
+.sc-ft{padding:8px 16px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2);}
+
+/* ── ACTIVITY ── */
+.act-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);}
+.act-item:last-child{border-bottom:none;}
+.act-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.act-name{font-size:13px;font-weight:500;}
+.act-meta{font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+.act-amt{font-family:'Bebas Neue',sans-serif;font-size:20px;margin-left:auto;flex-shrink:0;}
+
+/* ── SUMMARY STATS ── */
+.stats-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;}
+.stat-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-top:3px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:22px 18px calc(22px + var(--safe-bottom));width:100%;border-top:1px solid var(--border);transform:translateY(100%);transition:transform .3s ease;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:36px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:3px;}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:16px;}
+
+/* ── HO COST NOTICE ── */
+.ho-notice{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--purple);line-height:1.5;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 18px;font-size:13px;color:var(--text);z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.5);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.green{border-color:rgba(16,185,129,.4);color:var(--green);}
+.toast.red{border-color:rgba(239,68,68,.3);color:var(--red);}
+.toast.purple{border-color:rgba(139,92,246,.4);color:var(--purple);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:32px 16px;color:var(--text2);}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.3;}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin-bottom:14px;}
+.progress-top{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px;}
+.progress-track{height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),var(--blue));transition:width .6s ease;}
+
+/* EXPORT BTN */
+.btn-export{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text2);cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.btn-export:hover{border-color:var(--purple);color:var(--purple);}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="sp-logo">ZILIKO</div>
+  <div class="sp-tag">Branch Manager</div>
+  <div class="sp-sub">Zambia · Microfinance</div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
+</div>
+
+<!-- SETUP SHEET -->
+<div id="setup-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-logo">Connect Firebase</div>
+    <div class="sheet-sub">Enter your Firebase credentials and select your branch. Settings are saved on this device.</div>
+    <label class="fl">API Key</label>
+    <input class="fi" id="fb-apikey" placeholder="AIzaSy..."/>
+    <label class="fl">Project ID</label>
+    <input class="fi" id="fb-projectid" placeholder="your-project-id"/>
+    <label class="fl">App ID</label>
+    <input class="fi" id="fb-appid" placeholder="1:xxxxx:web:xxxxx"/>
+    <label class="fl">Your Branch</label>
+    <select class="fi fi-sel" id="fb-branch">
+      <option value="">Select your branch...</option>
+      <option value="branch1">Branch 1</option>
+      <option value="branch2">Branch 2</option>
+      <option value="branch3">Branch 3</option>
+    </select>
+    <button class="btn-connect" onclick="connectFirebase()">Connect & Open Dashboard ⚡</button>
+    <button class="btn-skip" onclick="skipSetup()">Use Demo Data</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="h-left">
+    <div class="h-logo">ZILIKO <span style="font-size:13px;color:var(--text2);">· BRANCH</span></div>
+    <div class="h-branch" id="h-branch-name">SELECT BRANCH</div>
+  </div>
+  <div class="h-right">
+    <div class="live-pill" id="live-pill" style="display:none;"><div class="live-dot"></div>LIVE</div>
+    <div class="h-clock" id="clock">—</div>
+  </div>
+</div>
+
+<!-- SCROLL AREA -->
+<div class="scroll-area" id="scroll-area">
+
+<!-- ══ OVERVIEW ══ -->
+<div class="screen active" id="screen-overview">
+  <div style="padding-top:4px;">
+    <div class="sec-title">Branch Overview</div>
+    <div class="sec-sub" id="ov-sub">Connect Firebase to see your branch live</div>
+
+    <div class="kpi-strip">
+      <div class="kpi-card" style="--kc:var(--purple);">
+        <div class="kpi-lbl">Portfolio Outstanding</div>
+        <div class="kpi-val" id="ov-portfolio">—</div>
+        <div class="kpi-sub" id="ov-loans-sub">— active loans</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--green);">
+        <div class="kpi-lbl">Collected This Month</div>
+        <div class="kpi-val" id="ov-collected">—</div>
+        <div class="kpi-sub" id="ov-coll-sub">— payments</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--red);">
+        <div class="kpi-lbl">PAR30</div>
+        <div class="kpi-val" id="ov-par">—</div>
+        <div class="kpi-sub" id="ov-par-sub">— clients overdue</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--amber);">
+        <div class="kpi-lbl">Operating Costs</div>
+        <div class="kpi-val" id="ov-costs">—</div>
+        <div class="kpi-sub" id="ov-net-sub">Net position this month</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><span class="panel-title">Portfolio Health</span></div>
+      <div class="bar-wrap"><div class="bar-row"><span>Current</span><span id="ov-curr-pct" style="color:var(--green);font-family:'JetBrains Mono',monospace;">—</span></div><div class="bar-track"><div class="bar-fill" id="ov-curr-bar" style="width:0%;background:var(--green);"></div></div></div>
+      <div class="bar-wrap"><div class="bar-row"><span>PAR 30</span><span id="ov-par30-pct" style="color:var(--amber);font-family:'JetBrains Mono',monospace;">—</span></div><div class="bar-track"><div class="bar-fill" id="ov-par30-bar" style="width:0%;background:var(--amber);"></div></div></div>
+      <div class="bar-wrap"><div class="bar-row"><span>Default</span><span id="ov-def-pct" style="color:var(--red);font-family:'JetBrains Mono',monospace;">—</span></div><div class="bar-track"><div class="bar-fill" id="ov-def-bar" style="width:0%;background:var(--red);"></div></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><span class="panel-title">This Month at a Glance</span></div>
+      <div id="ov-glance"><div style="color:var(--text2);font-size:12px;font-family:'JetBrains Mono',monospace;">Awaiting data...</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><span class="panel-title">Recent Activity</span></div>
+      <div id="ov-activity"><div class="empty"><div class="empty-icon">📊</div><div>No activity yet</div></div></div>
+    </div>
+    <div style="height:10px;"></div>
+  </div>
+</div>
+
+<!-- ══ LOANS ══ -->
+<div class="screen" id="screen-loans">
+  <div style="padding-top:4px;">
+    <div class="sec-title">Loan Book</div>
+    <div class="sec-sub" id="loans-sub-lbl">—</div>
+    <div class="stats-3">
+      <div class="stat-box"><div class="stat-val" id="lb-total">K0</div><div class="stat-lbl">Portfolio</div></div>
+      <div class="stat-box"><div class="stat-val" id="lb-current">0%</div><div class="stat-lbl">Current</div></div>
+      <div class="stat-box"><div class="stat-val" id="lb-par">0%</div><div class="stat-lbl">PAR30</div></div>
+    </div>
+    <div class="status-tabs">
+      <button class="stab active" onclick="filterLoans('all',this)">All</button>
+      <button class="stab" onclick="filterLoans('current',this)">Current</button>
+      <button class="stab" onclick="filterLoans('par30',this)">PAR30</button>
+      <button class="stab" onclick="filterLoans('default',this)">Default</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Borrower</th><th>Officer</th><th>Bal.</th><th>DPD</th><th>Status</th></tr></thead>
+        <tbody id="loan-tbody"></tbody>
+      </table>
+    </div>
+    <div style="height:10px;"></div>
+  </div>
+</div>
+
+<!-- ══ COSTS ══ -->
+<div class="screen" id="screen-costs">
+  <div style="padding-top:4px;">
+    <div class="panel-hd"><div><div class="sec-title">Operating Costs</div><div class="sec-sub">Record day-to-day branch expenses</div></div></div>
+
+    <!-- COST ENTRY FORM -->
+    <div class="panel">
+      <div class="panel-hd"><span class="panel-title">Add Expense</span></div>
+      <label class="fl">Category</label>
+      <select class="fi fi-sel" id="cost-cat">
+        <option value="transport">Transport / Fuel</option>
+        <option value="airtime">Airtime / Data</option>
+        <option value="stationery">Stationery / Printing</option>
+        <option value="marketing">Marketing / Client Acquisition</option>
+        <option value="equipment">Equipment</option>
+        <option value="other">Other</option>
+      </select>
+      <label class="fl">Description</label>
+      <input class="fi" id="cost-desc" placeholder="e.g. Fuel for Friday collections"/>
+      <div class="form-row-2">
+        <div><label class="fl">Amount (ZMW)</label><input class="fi" type="number" id="cost-amt" placeholder="0.00" inputmode="decimal"/></div>
+        <div><label class="fl">Date</label><input class="fi" type="date" id="cost-date"/></div>
+      </div>
+      <button class="btn-add" onclick="addCost()">+ Record Expense</button>
+    </div>
+
+    <!-- HEAD OFFICE COSTS NOTICE -->
+    <div class="ho-notice">
+      <span style="font-size:16px;">🏢</span>
+      <div>Salaries, rent and fixed costs are entered by Head Office and appear automatically in your P&L. Contact HO to add or update these.</div>
+    </div>
+
+    <!-- COST RECORDS -->
+    <div class="panel">
+      <div class="panel-hd">
+        <span class="panel-title">Cost Records</span>
+        <span id="cost-total-badge" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--red);">K0</span>
+      </div>
+      <div class="month-scroll" id="cost-month-scroll"></div>
+      <div style="overflow-x:auto;">
+        <table class="cost-table">
+          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="cost-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+  </div>
+</div>
+
+<!-- ══ P&L ══ -->
+<div class="screen" id="screen-pl">
+  <div style="padding-top:4px;">
+    <div class="panel-hd">
+      <div><div class="sec-title">Profit & Loss</div></div>
+      <button class="btn-export" onclick="exportPL()">⬇ Export</button>
+    </div>
+    <div class="month-scroll" id="pl-month-scroll"></div>
+
+    <div class="panel">
+      <div class="pl-section-title" style="color:var(--green);">INCOME</div>
+      <div class="pl-row"><span class="pl-label">Interest Income (Est.)</span><span class="pl-val" id="pl-interest" style="color:var(--green);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Total Collections</span><span class="pl-val" id="pl-collections" style="color:var(--green);">—</span></div>
+      <div class="pl-row total-row"><span class="pl-label" style="font-weight:700;">GROSS INCOME</span><span class="pl-val" id="pl-gross" style="color:var(--green);font-size:16px;">—</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="pl-section-title" style="color:var(--red);">OPERATING COSTS</div>
+      <div class="pl-row"><span class="pl-label">Staff Salaries <span style="font-size:10px;color:var(--purple);font-family:'JetBrains Mono',monospace;">HO</span></span><span class="pl-val" id="pl-salaries" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Office Rent <span style="font-size:10px;color:var(--purple);font-family:'JetBrains Mono',monospace;">HO</span></span><span class="pl-val" id="pl-rent" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Transport / Fuel</span><span class="pl-val" id="pl-transport" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Airtime / Data</span><span class="pl-val" id="pl-airtime" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Stationery</span><span class="pl-val" id="pl-stationery" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Loan Losses</span><span class="pl-val" id="pl-losses" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Equipment</span><span class="pl-val" id="pl-equipment" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Marketing</span><span class="pl-val" id="pl-marketing" style="color:var(--red);">—</span></div>
+      <div class="pl-row"><span class="pl-label">Other</span><span class="pl-val" id="pl-other" style="color:var(--red);">—</span></div>
+      <div class="pl-row total-row"><span class="pl-label" style="font-weight:700;">TOTAL COSTS</span><span class="pl-val" id="pl-total-costs" style="color:var(--red);font-size:16px;">—</span></div>
+    </div>
+
+    <div class="pl-net-box">
+      <div class="pl-net-lbl">NET PROFIT / LOSS</div>
+      <div class="pl-net-val" id="pl-net">—</div>
+      <div class="pl-net-sub" id="pl-net-sub">—</div>
+    </div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+
+<!-- ══ OFFICERS / SCORECARDS ══ -->
+<div class="screen" id="screen-officers">
+  <div style="padding-top:4px;">
+    <div class="panel-hd">
+      <div><div class="sec-title">Officer Scorecards</div></div>
+      <button class="btn-export" onclick="exportScorecards()">⬇ Export</button>
+    </div>
+    <div class="sc-period-row">
+      <button class="sc-pbtn active" onclick="setScPeriod('month',this)">This Month</button>
+      <button class="sc-pbtn" onclick="setScPeriod('week',this)">This Week</button>
+      <button class="sc-pbtn" onclick="setScPeriod('quarter',this)">This Quarter</button>
+      <button class="sc-pbtn" onclick="setScPeriod('all',this)">All Time</button>
+    </div>
+    <div id="scorecard-list"><div class="empty"><div class="empty-icon">👤</div><div>Connect Firebase to load officer data</div></div></div>
+    <div style="height:10px;"></div>
+  </div>
+</div>
+
+</div><!-- end scroll area -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab('overview',this)"><div class="nav-icon">🏠</div><div class="nav-label">Overview</div></div>
+  <div class="nav-item" onclick="switchTab('loans',this)"><div class="nav-icon">📋</div><div class="nav-label">Loans</div></div>
+  <div class="nav-item" onclick="switchTab('costs',this)"><div class="nav-icon">💳</div><div class="nav-label">Costs</div></div>
+  <div class="nav-item" onclick="switchTab('pl',this)"><div class="nav-icon">📈</div><div class="nav-label">P&L</div></div>
+  <div class="nav-item" onclick="switchTab('officers',this)"><div class="nav-icon">👥</div><div class="nav-label">Officers</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_F=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const COST_CATS={transport:'Transport/Fuel',airtime:'Airtime/Data',stationery:'Stationery',marketing:'Marketing',equipment:'Equipment',salaries:'Staff Salaries',rent:'Office Rent',loan_losses:'Loan Losses',other:'Other'};
+const BRANCH_NAMES={branch1:'Branch 1',branch2:'Branch 2',branch3:'Branch 3'};
+const BAR_COL=p=>p>=90?'#10b981':p>=70?'#2563eb':p>=50?'#f59e0b':'#ef4444';
+
+let db=null, currentBranch=null;
+let allLoans=[], allActivity=[], allOfficers=[], allCosts=[], allHOCosts=[];
+let loanFilter='all', costMonth=null, plMonth=null, scPeriod='month';
+
+const fmt=v=>v>=1000000?'K'+(v/1000000).toFixed(2)+'M':v>=1000?'K'+(v/1000).toFixed(1)+'K':'K'+v.toFixed(0);
+const fmtF=v=>'K'+Number(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+const thisMonth=()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;};
+const init=n=>n.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+
+// ════════════════════════════════════════════
+// SPLASH & INIT
+// ════════════════════════════════════════════
+// ── ZILIKO CREDIT EXPRESS — FIREBASE AUTO-CONNECT ──
+const ZILIKO_FB_CONFIG = {
+  apiKey: "AIzaSyAarzJuvVYoZ0fW2IOau-IJyQ3HLHNjVYw",
+  projectId: "ziliko-credit-express",
+  appId: "1:405935937112:web:c8f0d57907752daf9b5c2d",
+  databaseURL: "https://ziliko-credit-express-default-rtdb.europe-west1.firebasedatabase.app",
+  branch: null // set per device after first open
+};
+
+setTimeout(()=>{
+  document.getElementById('splash').style.opacity='0';
+  document.getElementById('splash').style.transition='opacity .4s';
+  setTimeout(()=>{
+    document.getElementById('splash').style.display='none';
+    const saved=localStorage.getItem('ziliko_bm_config');
+    if(saved){
+      try{
+        const c=JSON.parse(saved);
+        fillSetup(c);
+        initFirebase(c);
+      }catch(e){showSetup();}
+    } else {
+      // Pre-fill Firebase fields but still ask for branch selection
+      document.getElementById('fb-apikey').value = ZILIKO_FB_CONFIG.apiKey;
+      document.getElementById('fb-projectid').value = ZILIKO_FB_CONFIG.projectId;
+      document.getElementById('fb-appid').value = ZILIKO_FB_CONFIG.appId;
+      showSetup();
+    }
+  },400);
+},2000);
+
+function fillSetup(c){
+  document.getElementById('fb-apikey').value=c.apiKey||'';
+  document.getElementById('fb-projectid').value=c.projectId||'';
+  document.getElementById('fb-appid').value=c.appId||'';
+  document.getElementById('fb-branch').value=c.branch||'';
+}
+function showSetup(){document.getElementById('setup-sheet').classList.add('open');}
+function skipSetup(){
+  document.getElementById('setup-sheet').classList.remove('open');
+  currentBranch='branch1';
+  document.getElementById('h-branch-name').textContent=BRANCH_NAMES['branch1'];
+  allLoans=demoLoans(); allActivity=demoActivity();
+  costMonth=thisMonth(); plMonth=thisMonth();
+  buildMonthTabs(); refreshAll();
+  toast('Demo mode — data is not saved','purple');
+}
+
+function connectFirebase(){
+  const apiKey=document.getElementById('fb-apikey').value.trim();
+  const projectId=document.getElementById('fb-projectid').value.trim();
+  const appId=document.getElementById('fb-appid').value.trim();
+  const branch=document.getElementById('fb-branch').value;
+  if(!apiKey||!projectId||!appId||!branch){toast('Fill all fields and select branch','red');return;}
+  localStorage.setItem('ziliko_bm_config',JSON.stringify({apiKey,projectId,appId,branch}));
+  initFirebase({apiKey,projectId,appId,branch});
+}
+
+function initFirebase(cfg){
+  try{if(firebase.apps.length)firebase.app().delete();}catch(e){}
+  try{
+    firebase.initializeApp({apiKey:cfg.apiKey,authDomain:`${cfg.projectId}.firebaseapp.com`,
+      databaseURL:`https://${cfg.projectId}-default-rtdb.firebaseio.com`,projectId:cfg.projectId,appId:cfg.appId});
+    db=firebase.database();
+    currentBranch=cfg.branch;
+    document.getElementById('h-branch-name').textContent=BRANCH_NAMES[currentBranch]||currentBranch;
+    document.getElementById('live-pill').style.display='inline-flex';
+    document.getElementById('setup-sheet').classList.remove('open');
+
+    // Subscribe officers first
+    db.ref('officers').on('value',s=>{
+      allOfficers=Object.values(s.val()||{});
+      // Re-filter loans by branch after officers load
+      db.ref('loans').once('value',ls=>{
+        const raw=Object.values(ls.val()||{});
+        allLoans=filterByBranch(raw);
+        refreshAll();
+      });
+    });
+    // Subscribe loans
+    db.ref('loans').on('value',s=>{
+      allLoans=filterByBranch(Object.values(s.val()||{}));
+      refreshAll();
+    });
+    // Subscribe activity
+    db.ref('activity').limitToLast(500).on('value',s=>{
+      allActivity=Object.values(s.val()||{}).sort((a,b)=>new Date(b.time)-new Date(a.time));
+      refreshAll();
+    });
+    // Branch operational costs (entered by branch manager)
+    db.ref(`costs/${currentBranch}`).on('value',s=>{
+      allCosts=Object.entries(s.val()||{}).map(([k,v])=>({key:k,...v}));
+      buildMonthTabs(); refreshAll();
+    });
+    // Head office costs (salaries, rent — read-only for branch)
+    db.ref(`costs_ho/${currentBranch}`).on('value',s=>{
+      allHOCosts=Object.values(s.val()||{});
+      buildMonthTabs(); refreshAll();
+    });
+
+    buildMonthTabs(); costMonth=costMonth||thisMonth(); plMonth=plMonth||thisMonth();
+    toast('Connected — '+BRANCH_NAMES[currentBranch]+' live ⚡','green');
+  }catch(e){toast('Connection failed: '+e.message,'red');showSetup();}
+}
+
+function filterByBranch(loans){
+  const names=branchOfficerNames();
+  if(!names.length) return loans; // no officers mapped yet → show all
+  return loans.filter(l=>names.includes(l.officer));
+}
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function branchOfficerNames(){
+  const bOff=allOfficers.filter(o=>o.branch===currentBranch);
+  return bOff.length?bOff.map(o=>o.name):[...new Set(allLoans.map(l=>l.officer).filter(Boolean))];
+}
+function activityForBranch(month){
+  const names=branchOfficerNames();
+  return allActivity.filter(a=>names.includes(a.officer)&&(!month||a.time?.startsWith(month)));
+}
+function allCostsForMonth(month){
+  const all=[...allCosts,...allHOCosts];
+  return month?all.filter(c=>c.date?.startsWith(month)):all;
+}
+
+// ════════════════════════════════════════════
+// REFRESH ALL
+// ════════════════════════════════════════════
+function refreshAll(){
+  renderOverview(); renderLoans(); renderCosts(); renderPL(); renderScorecards();
+}
+
+// ════════════════════════════════════════════
+// OVERVIEW
+// ════════════════════════════════════════════
+function renderOverview(){
+  const mn=thisMonth();
+  const total=allLoans.reduce((s,l)=>s+Number(l.amount),0);
+  const par30L=allLoans.filter(l=>Number(l.dpd||0)>=30);
+  const par30Amt=par30L.reduce((s,l)=>s+Number(l.amount),0);
+  const defAmt=allLoans.filter(l=>l.status==='default').reduce((s,l)=>s+Number(l.amount),0);
+  const currAmt=total-par30Amt-defAmt;
+  const par30pct=total?(par30Amt/total*100).toFixed(1):0;
+  const defpct=total?(defAmt/total*100).toFixed(1):0;
+  const currpct=total?(currAmt/total*100).toFixed(1):0;
+
+  const acts=activityForBranch(mn);
+  const collected=acts.filter(a=>a.type==='payment').reduce((s,a)=>s+Number(a.amount||0),0);
+  const collCount=acts.filter(a=>a.type==='payment').length;
+  const costs=allCostsForMonth(mn).reduce((s,c)=>s+Number(c.amount||0),0);
+  const disbL=allLoans.filter(l=>l.date?.startsWith(mn));
+  const interest=disbL.reduce((s,l)=>s+(Number(l.amount)*Number(l.rate||10)/100),0);
+  const net=collected+interest-costs;
+
+  document.getElementById('ov-sub').textContent=BRANCH_NAMES[currentBranch]||'—';
+  document.getElementById('ov-portfolio').textContent=fmt(total);
+  document.getElementById('ov-loans-sub').textContent=allLoans.length+' active loans';
+  document.getElementById('ov-collected').textContent=fmt(collected);
+  document.getElementById('ov-coll-sub').textContent=collCount+' payments';
+  document.getElementById('ov-par').textContent=par30pct+'%';
+  document.getElementById('ov-par-sub').textContent=par30L.length+' clients overdue';
+  document.getElementById('ov-costs').textContent=fmt(costs);
+  document.getElementById('ov-net-sub').textContent=(net>=0?'Net profit: +':'Net loss: ')+fmtF(Math.abs(net));
+
+  document.getElementById('ov-curr-pct').textContent=currpct+'%'; document.getElementById('ov-curr-bar').style.width=currpct+'%';
+  document.getElementById('ov-par30-pct').textContent=par30pct+'%'; document.getElementById('ov-par30-bar').style.width=Math.min(par30pct,100)+'%';
+  document.getElementById('ov-def-pct').textContent=defpct+'%'; document.getElementById('ov-def-bar').style.width=Math.min(defpct,100)+'%';
+
+  const disbActs=acts.filter(a=>a.type==='disburse');
+  const disbAmt=disbActs.reduce((s,a)=>s+Number(a.amount||0),0);
+  document.getElementById('ov-glance').innerHTML=[
+    ['New loans this month',disbActs.length,'var(--blue)'],
+    ['Total disbursed',fmtF(disbAmt),'var(--blue)'],
+    ['Collections',fmtF(collected),'var(--green)'],
+    ['Operating costs',fmtF(costs),'var(--red)'],
+    ['Est. interest income',fmtF(interest),'var(--purple)'],
+    ['Net position',(net>=0?'+':'')+fmtF(net),net>=0?'var(--green)':'var(--red)'],
+  ].map(([lbl,val,col])=>`<div class="pl-row"><span class="pl-label">${lbl}</span><span class="pl-val" style="color:${col};">${val}</span></div>`).join('');
+
+  const recent=activityForBranch(null).slice(0,6);
+  const icons={payment:'💰',disburse:'🏦',missed:'⚠️',promise:'🤝'};
+  const cols={payment:'var(--green)',disburse:'var(--blue)',missed:'var(--red)',promise:'var(--amber)'};
+  document.getElementById('ov-activity').innerHTML=recent.length?recent.map(a=>`
+    <div class="act-item">
+      <div class="act-icon" style="background:${cols[a.type]?cols[a.type]+'18':'var(--bg3)'};">${icons[a.type]||'📌'}</div>
+      <div style="flex:1;min-width:0;"><div class="act-name">${a.borrower||'—'}</div><div class="act-meta">${a.type?.toUpperCase()||'—'} · ${a.officer||''} · ${a.time?.split('T')[1]?.slice(0,5)||''}</div></div>
+      <div class="act-amt" style="color:${cols[a.type]||'var(--text2)'};">${a.amount?'K'+Number(a.amount).toLocaleString():'—'}</div>
+    </div>`).join(''):`<div class="empty"><div class="empty-icon" style="font-size:24px;">📊</div><div>No activity yet</div></div>`;
+}
+
+// ════════════════════════════════════════════
+// LOANS
+// ════════════════════════════════════════════
+function filterLoans(f,el){
+  loanFilter=f;
+  document.querySelectorAll('#screen-loans .stab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderLoans();
+}
+function renderLoans(){
+  const filtered=loanFilter==='all'?allLoans:allLoans.filter(l=>l.status===loanFilter);
+  const total=allLoans.reduce((s,l)=>s+Number(l.amount),0);
+  const curr=allLoans.filter(l=>l.status==='current').reduce((s,l)=>s+Number(l.amount),0);
+  const par=allLoans.filter(l=>l.status==='par30').reduce((s,l)=>s+Number(l.amount),0);
+  document.getElementById('loans-sub-lbl').textContent=(BRANCH_NAMES[currentBranch]||'—')+' · '+allLoans.length+' loans';
+  document.getElementById('lb-total').textContent=fmt(total);
+  document.getElementById('lb-current').textContent=total?(curr/total*100).toFixed(0)+'%':'0%';
+  document.getElementById('lb-par').textContent=total?(par/total*100).toFixed(0)+'%':'0%';
+  document.getElementById('loan-tbody').innerHTML=filtered.map(l=>`
+    <tr>
+      <td style="font-weight:500;">${l.borrower}</td>
+      <td style="color:var(--text2);font-size:11px;">${l.officer}</td>
+      <td class="mono" style="font-size:11px;">K${Number(l.amount).toLocaleString()}</td>
+      <td class="mono" style="font-size:11px;${l.dpd>90?'color:var(--red)':l.dpd>30?'color:var(--amber)':''}">${l.dpd||0}d</td>
+      <td><span class="pill pill-${l.status}">${l.status?.toUpperCase()}</span></td>
+    </tr>`).join('')||`<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text2);">No loans in this category</td></tr>`;
+}
+
+// ════════════════════════════════════════════
+// COSTS
+// ════════════════════════════════════════════
+function buildMonthTabs(){
+  const months=new Set();
+  [...allCosts,...allHOCosts].forEach(c=>{if(c.date)months.add(c.date.slice(0,7));});
+  allActivity.forEach(a=>{if(a.time)months.add(a.time.slice(0,7));});
+  const sorted=[...months].sort().reverse();
+  if(!sorted.length) sorted.push(thisMonth());
+  if(!costMonth||!sorted.includes(costMonth)) costMonth=sorted[0];
+  if(!plMonth||!sorted.includes(plMonth)) plMonth=sorted[0];
+
+  const makeScroll=(id,current,setter)=>{
+    const el=document.getElementById(id);
+    el.innerHTML=sorted.map(m=>{const[y,mo]=m.split('-');return `<button class="month-chip${m===current?' active':''}" onclick="${setter}('${m}',this)">${MONTHS_S[parseInt(mo)-1]} ${y}</button>`;}).join('');
+  };
+  makeScroll('cost-month-scroll',costMonth,'setCostMonth');
+  makeScroll('pl-month-scroll',plMonth,'setPlMonth');
+}
+function setCostMonth(m,el){costMonth=m;document.querySelectorAll('#cost-month-scroll .month-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderCosts();}
+function setPlMonth(m,el){plMonth=m;document.querySelectorAll('#pl-month-scroll .month-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderPL();}
+
+function renderCosts(){
+  const mn=costMonth||thisMonth();
+  const costs=allCosts.filter(c=>c.date?.startsWith(mn));
+  const total=costs.reduce((s,c)=>s+Number(c.amount||0),0);
+  document.getElementById('cost-total-badge').textContent=fmtF(total);
+  document.getElementById('cost-tbody').innerHTML=costs.length?costs.map(c=>`
+    <tr>
+      <td class="mono" style="font-size:10px;color:var(--text2);">${c.date}</td>
+      <td style="font-size:11px;">${COST_CATS[c.category]||c.category}</td>
+      <td style="font-size:11px;color:var(--text2);">${c.description||'—'}</td>
+      <td class="mono" style="color:var(--red);">${fmtF(Number(c.amount||0))}</td>
+      <td><button class="del-btn" onclick="deleteCost('${c.key}')">✕</button></td>
+    </tr>`).join(''):`<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text2);font-size:12px;">No costs for this period</td></tr>`;
+}
+
+async function addCost(){
+  if(!db||!currentBranch){toast('Connect Firebase first','red');return;}
+  const cat=document.getElementById('cost-cat').value;
+  const desc=document.getElementById('cost-desc').value.trim();
+  const amt=parseFloat(document.getElementById('cost-amt').value);
+  const date=document.getElementById('cost-date').value;
+  if(!amt||amt<=0){toast('Enter a valid amount','red');return;}
+  if(!date){toast('Select a date','red');return;}
+  await db.ref(`costs/${currentBranch}`).push({category:cat,description:desc,amount:amt,date,branch:currentBranch,enteredBy:'branch_manager',createdAt:new Date().toISOString()});
+  document.getElementById('cost-amt').value='';
+  document.getElementById('cost-desc').value='';
+  toast('✓ Expense recorded: '+fmtF(amt),'green');
+}
+async function deleteCost(key){
+  if(!confirm('Delete this cost entry?')) return;
+  await db.ref(`costs/${currentBranch}/${key}`).remove();
+  toast('Entry deleted');
+}
+
+// ════════════════════════════════════════════
+// P&L
+// ════════════════════════════════════════════
+function renderPL(){
+  const mn=plMonth||thisMonth();
+  const acts=activityForBranch(mn);
+  const allC=allCostsForMonth(mn);
+  const collections=acts.filter(a=>a.type==='payment').reduce((s,a)=>s+Number(a.amount||0),0);
+  const disbL=allLoans.filter(l=>l.date?.startsWith(mn));
+  const interest=disbL.reduce((s,l)=>s+(Number(l.amount)*Number(l.rate||10)/100),0);
+  const gross=collections+interest;
+  const costBy=cat=>allC.filter(c=>c.category===cat).reduce((s,c)=>s+Number(c.amount||0),0);
+  const salaries=costBy('salaries'), rent=costBy('rent'), transport=costBy('transport');
+  const airtime=costBy('airtime'), stationery=costBy('stationery');
+  const losses=allLoans.filter(l=>l.status==='default'&&l.date?.startsWith(mn)).reduce((s,l)=>s+Number(l.amount),0);
+  const equipment=costBy('equipment'), marketing=costBy('marketing'), other=costBy('other');
+  const totalCosts=salaries+rent+transport+airtime+stationery+losses+equipment+marketing+other;
+  const net=gross-totalCosts;
+  const fv=v=>v>0?fmtF(v):'—';
+  document.getElementById('pl-interest').textContent=fv(interest);
+  document.getElementById('pl-collections').textContent=fv(collections);
+  document.getElementById('pl-gross').textContent=fmtF(gross);
+  document.getElementById('pl-salaries').textContent=fv(salaries);
+  document.getElementById('pl-rent').textContent=fv(rent);
+  document.getElementById('pl-transport').textContent=fv(transport);
+  document.getElementById('pl-airtime').textContent=fv(airtime);
+  document.getElementById('pl-stationery').textContent=fv(stationery);
+  document.getElementById('pl-losses').textContent=fv(losses);
+  document.getElementById('pl-equipment').textContent=fv(equipment);
+  document.getElementById('pl-marketing').textContent=fv(marketing);
+  document.getElementById('pl-other').textContent=fv(other);
+  document.getElementById('pl-total-costs').textContent=fmtF(totalCosts);
+  const netEl=document.getElementById('pl-net');
+  netEl.textContent=(net>=0?'+':'')+fmtF(net);
+  netEl.style.color=net>=0?'var(--green)':'var(--red)';
+  document.getElementById('pl-net-sub').textContent=net>=0?`Branch profitable — income exceeds costs by ${fmtF(net)}`:`Branch at a loss — costs exceed income by ${fmtF(Math.abs(net))}. Review cost structure.`;
+}
+
+function exportPL(){
+  const mn=plMonth||thisMonth();
+  const[y,mo]=mn.split('-');
+  const acts=activityForBranch(mn);
+  const allC=allCostsForMonth(mn);
+  const collections=acts.filter(a=>a.type==='payment').reduce((s,a)=>s+Number(a.amount||0),0);
+  const disbL=allLoans.filter(l=>l.date?.startsWith(mn));
+  const interest=disbL.reduce((s,l)=>s+(Number(l.amount)*Number(l.rate||10)/100),0);
+  const totalCosts=allC.reduce((s,c)=>s+Number(c.amount||0),0);
+  const net=collections+interest-totalCosts;
+  const rows=[['ZILIKO — '+(BRANCH_NAMES[currentBranch]||''),'P&L REPORT',MONTHS_F[parseInt(mo)-1]+' '+y],[''],['INCOME'],['Interest Income (Est.)',interest.toFixed(0)],['Total Collections',collections.toFixed(0)],['GROSS INCOME',(collections+interest).toFixed(0)],[''],['OPERATING COSTS'],...allC.map(c=>[COST_CATS[c.category]||c.category,Number(c.amount).toFixed(0)]),['TOTAL COSTS',totalCosts.toFixed(0)],[''],['NET PROFIT / LOSS',net.toFixed(0)]];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ziliko-${currentBranch}-pl-${mn}.csv`;a.click();
+}
+
+// ════════════════════════════════════════════
+// SCORECARDS
+// ════════════════════════════════════════════
+function setScPeriod(p,el){scPeriod=p;document.querySelectorAll('.sc-pbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderScorecards();}
+function getPeriodStart(p){
+  const now=new Date(),t=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if(p==='week'){const s=new Date(t);s.setDate(t.getDate()-t.getDay());return s;}
+  if(p==='month') return new Date(t.getFullYear(),t.getMonth(),1);
+  if(p==='quarter'){const q=Math.floor(t.getMonth()/3);return new Date(t.getFullYear(),q*3,1);}
+  return new Date('2020-01-01');
+}
+function renderScorecards(){
+  const names=branchOfficerNames();
+  const list=document.getElementById('scorecard-list');
+  if(!names.length){list.innerHTML='<div class="empty"><div class="empty-icon">👤</div><div>No officers assigned to this branch yet</div></div>';return;}
+  const start=getPeriodStart(scPeriod),end=new Date();end.setDate(end.getDate()+1);
+  const inRange=d=>{const dt=new Date(d+'T00:00:00');return dt>=start&&dt<end;};
+  const pLabel={week:'This Week',month:'This Month',quarter:'This Quarter',all:'All Time'}[scPeriod];
+  const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+
+  const kpis=names.map(name=>{
+    const loans=allLoans.filter(l=>l.officer===name);
+    const portfolio=loans.reduce((s,l)=>s+Number(l.amount),0);
+    const par30L=loans.filter(l=>Number(l.dpd||0)>=30);
+    const par30Amt=par30L.reduce((s,l)=>s+Number(l.amount),0);
+    const par30pct=portfolio?(par30Amt/portfolio*100):0;
+    const defL=loans.filter(l=>l.status==='default');
+    const defAmt=defL.reduce((s,l)=>s+Number(l.amount),0);
+    const defpct=portfolio?(defAmt/portfolio*100):0;
+    const acts=allActivity.filter(a=>a.officer===name&&a.time&&inRange(a.time.split('T')[0]));
+    const payments=acts.filter(a=>a.type==='payment');
+    const disbursals=acts.filter(a=>a.type==='disburse');
+    const missed=acts.filter(a=>a.type==='missed').length;
+    const promises=acts.filter(a=>a.type==='promise').length;
+    const collected=payments.reduce((s,a)=>s+Number(a.amount||0),0);
+    const newLoans=disbursals.length, newAmt=disbursals.reduce((s,a)=>s+Number(a.amount||0),0);
+    const expected=loans.filter(l=>l.status!=='default').reduce((s,l)=>s+Number(l.weeklyInstalment||0),0)*4;
+    const collRate=expected>0?Math.min(100,collected/expected*100):100;
+    const overdueAmt=par30Amt+defAmt;
+    const recovAmt=payments.filter(a=>{const l=loans.find(x=>x.id===a.id);return l&&Number(l.dpd||0)>0;}).reduce((s,a)=>s+Number(a.amount||0),0);
+    const recovRate=overdueAmt>0?Math.min(100,recovAmt/overdueAmt*100):100;
+    const p30sc=Math.max(0,100-par30pct*4),defsc=Math.max(0,100-defpct*5),collsc=Math.min(100,collRate),missc=Math.max(0,100-missed*5),newsc=Math.min(100,newLoans*10);
+    const overall=Math.round(collsc*.35+p30sc*.25+defsc*.20+missc*.10+newsc*.10);
+    let rating,stN,rCol,rBg;
+    if(overall>=90){rating='EXCELLENT';stN=5;rCol='#10b981';rBg='rgba(16,185,129,.12)';}
+    else if(overall>=75){rating='GOOD';stN=4;rCol='#2563eb';rBg='rgba(37,99,235,.12)';}
+    else if(overall>=60){rating='FAIR';stN=3;rCol='#f59e0b';rBg='rgba(245,158,11,.12)';}
+    else if(overall>=45){rating='NEEDS IMPROVEMENT';stN=2;rCol='#f59e0b';rBg='rgba(245,158,11,.12)';}
+    else{rating='CRITICAL';stN=1;rCol='#ef4444';rBg='rgba(239,68,68,.12)';}
+    const aCol=overall>=90?'#10b981':overall>=75?'#2563eb':overall>=60?'#f59e0b':'#ef4444';
+    return{name,overall,rating,stN,rCol,rBg,aCol,portfolio,activeLoans:loans.filter(l=>l.status!=='default').length,par30pct:par30pct.toFixed(1),par30Count:par30L.length,defpct:defpct.toFixed(1),defCount:defL.length,collected,newLoans,newAmt,missed,promises,collRate:collRate.toFixed(1),recovRate:recovRate.toFixed(1),p30sc:p30sc.toFixed(0),defsc:defsc.toFixed(0),collsc:collsc.toFixed(0),missc:missc.toFixed(0),newsc:newsc.toFixed(0)};
+  }).sort((a,b)=>b.overall-a.overall);
+
+  list.innerHTML=kpis.map((k,rank)=>`
+    <div class="sc-card">
+      <div class="sc-hd">
+        <div class="sc-av" style="background:${k.aCol};">${init(k.name)}</div>
+        <div style="flex:1;">
+          <div class="sc-name">${k.name}</div>
+          <div class="sc-sub">${k.activeLoans} loans · ${fmt(k.portfolio)}</div>
+          <div class="sc-stars" style="color:${k.rCol};">${stars(k.stN)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="sc-score" style="color:${k.aCol};">${k.overall}</div>
+          <div class="sc-score-sub">/ 100</div>
+          <div class="sc-badge" style="color:${k.rCol};background:${k.rBg};">${k.rating}</div>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-kpi-grid">
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Collection Rate</div><div class="sc-kpi-val" style="color:${BAR_COL(k.collRate)};">${k.collRate}%</div><div class="sc-kpi-sub">vs due payments</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">PAR30</div><div class="sc-kpi-val" style="color:${parseFloat(k.par30pct)>10?'#ef4444':parseFloat(k.par30pct)>5?'#f59e0b':'#10b981'};">${k.par30pct}%</div><div class="sc-kpi-sub">${k.par30Count} clients late</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">New Loans</div><div class="sc-kpi-val" style="color:var(--blue);">${k.newLoans}</div><div class="sc-kpi-sub">${fmt(k.newAmt)} · ${pLabel}</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Recovery Rate</div><div class="sc-kpi-val" style="color:${BAR_COL(k.recovRate)};">${k.recovRate}%</div><div class="sc-kpi-sub">overdue recovered</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Default Rate</div><div class="sc-kpi-val" style="color:${parseFloat(k.defpct)>5?'#ef4444':'#10b981'};">${k.defpct}%</div><div class="sc-kpi-sub">${k.defCount} written off</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Missed</div><div class="sc-kpi-val" style="color:${k.missed>5?'#ef4444':k.missed>2?'#f59e0b':'#10b981'};">${k.missed}</div><div class="sc-kpi-sub">${pLabel}</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Collected</div><div class="sc-kpi-val" style="color:var(--green);">${fmt(k.collected)}</div><div class="sc-kpi-sub">${pLabel}</div></div>
+          <div class="sc-kpi"><div class="sc-kpi-lbl">Promises</div><div class="sc-kpi-val" style="color:var(--amber);">${k.promises}</div><div class="sc-kpi-sub">to pay recorded</div></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:7px;">Score Breakdown</div>
+        ${[['Collection (35%)',k.collsc,'#2563eb'],['PAR30 Control (25%)',k.p30sc,'#10b981'],['Default Control (20%)',k.defsc,'#8b5cf6'],['Missed Pmts (10%)',k.missc,'#f59e0b'],['New Loans (10%)',k.newsc,'#10b981']].map(([lbl,val,col])=>`
+          <div class="sc-bar-row">
+            <div class="sc-bar-lbl">${lbl}</div>
+            <div class="sc-bar-t"><div class="sc-bar-f" style="width:${val}%;background:${col};"></div></div>
+            <div class="sc-bar-p" style="color:${col};">${Math.round(val)}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="sc-ft">
+        <span>Rank <strong style="color:${k.aCol};">#${rank+1}</strong> of ${kpis.length}</span>
+        <span>${pLabel}</span>
+      </div>
+    </div>`).join('');
+}
+
+function exportScorecards(){toast('CSV export available on hosted version');}
+
+// ════════════════════════════════════════════
+// DEMO DATA
+// ════════════════════════════════════════════
+function demoLoans(){
+  const names=['Mulenga C.','Tembo J.','Phiri B.','Banda A.','Zulu R.','Mwansa D.','Kabwe L.','Chisanga P.','Lungu M.','Mwale T.','Sinkala N.','Chileshe K.'];
+  const offs=['Chanda M.','Bwalya K.','Mutale S.'];
+  return names.map((name,i)=>{const amt=Math.round((20000+Math.random()*60000)/1000)*1000,rate=30,total=amt*1.3,term=8,weekly=Math.ceil(total/term),d=new Date();d.setDate(d.getDate()-14-Math.floor(Math.random()*40));
+    return{id:'L'+String(i+1).padStart(3,'0'),borrower:name,amount:amt,officer:offs[i%offs.length],dpd:i<9?Math.floor(Math.random()*15):i<11?35:95,status:i<9?'current':i<11?'par30':'default',date:d.toISOString().split('T')[0],payDayOfWeek:new Date().getDay(),weeklyInstalment:weekly,term,rate,loanType:'weekly'};
+  });
+}
+function demoActivity(){
+  const offs=['Chanda M.','Bwalya K.','Mutale S.'];
+  const names=['Mulenga C.','Tembo J.','Phiri B.','Banda A.','Zulu R.'];
+  const now=new Date().toISOString();
+  return Array.from({length:12},(_,i)=>({type:i%3===0?'disburse':'payment',borrower:names[i%5],id:'L'+String((i%12)+1).padStart(3,'0'),amount:Math.round(5000+Math.random()*20000),officer:offs[i%3],time:new Date(Date.now()-i*3600000).toISOString()}));
+}
+
+// ════════════════════════════════════════════
+// NAV & UTILS
+// ════════════════════════════════════════════
+function switchTab(tab,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('scroll-area').scrollTop=0;
+  if(tab==='costs') renderCosts();
+  if(tab==='pl') renderPL();
+  if(tab==='officers') renderScorecards();
+}
+function toast(msg,type=''){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{timeZone:'Africa/Lusaka',hour:'2-digit',minute:'2-digit',hour12:false});}
+setInterval(updateClock,1000); updateClock();
+
+// Pre-fill today's date
+document.getElementById('cost-date').value=new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
